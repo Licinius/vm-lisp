@@ -1,5 +1,7 @@
+(require "machine.lisp")
+
 ; MOVE P1 P2
-(defun MOVE (vm P1 P2)
+(defun vm-move (vm P1 P2)
 	(if (atom P1)
 		(setf (get vm P2) P1)
 		(setf (get vm P2) (get vm P1))
@@ -7,120 +9,161 @@
 )
 
 ; LOAD adr P
-(defun LOAD (vm adr P)
+(defun vm-load (vm adr P)
 	(setf (get vm P) (aref (get vm 'mem) adr))
 )
 
 ; STORE P adr
-(defun STORE (vm P adr)
+(defun vm-store (vm P adr)
 	(setf (aref (get vm 'mem) adr) (get vm P))
 )
 
 ; INCR P
-(defun INCR (vm P)
+(defun vm-incr (vm P)
 	(setf (get vm P) (+ (get vm P) 1))
 )
 
 ; DECR P
-(defun DECR (vm P)
+(defun vm-decr (vm P)
 	(setf (get vm P) (- (get vm P) 1))
 )
 
 ; ADD P1 P2
-(defun ADD (vm P1 P2)
+(defun vm-add (vm P1 P2)
 	(setf (get vm P2) (+ (get vm P2) (get vm P1)))
 )
 
 ; SUB P1 P2
-(defun SUB (vm P1 P2)
+(defun vm-sub (vm P1 P2)
 	(setf (get vm P2) (- (get vm P2) (get vm P1)))
 )
 
 ; MULT P1 P2
-(defun MULT (vm P1 P2)
+(defun vm-mult (vm P1 P2)
 	(setf (get vm P2) (* (get vm P2) (get vm P1)))
 )
 
 ; DIV P1 P2
-(defun DIV (vm P1 P2)
+(defun vm-div (vm P1 P2)
 	(if (not (equal (get vm P1) 0))
 		(setf (get vm P2) (/ (get vm P2) (get vm P1)))
 	)
 )
 
 ; PUSH P1
-(defun PUSH (vm P1)
-	(DECR (get vm 'SP))
-	(STORE P1 (get vm 'SP))
+(defun vm-push (vm P1)
+	(vm-decr (get vm 'SP))
+	(vm-store P1 (get vm 'SP))
 )
 
 ; POP P1
-(defun POP (vm P1)
-	(LOAD (get vm 'SP) P1)
-	(INCR (get vm 'SP))
+(defun vm-pop (vm P1)
+	(vm-load (get vm 'SP) P1)
+	(vm-decr (get vm 'SP))
 )
 
 ; JPG etiq
-(defun JPG (vm etiq)
+(defun vm-jpg (vm etiq)
 	(if (equal (get vm 'DPG) 1)
-		(JMP etiq)
+		(vm-jmp etiq)
 	)
 )
 
 ; JEQ etiq
-(defun JEQ (vm etiq)
+(defun vm-jeq (vm etiq)
 	(if (equal (get vm 'DEQ) 1)
-		(JMP etiq)
+		(vm-jmp etiq)
 	)
 )
 
 ; JPP etiq
-(defun JPP (vm etiq)
+(defun vm-jpp (vm etiq)
 	(if (equal (get vm 'DPP) 1)
-		(JMP etiq)
+		(vm-jmp etiq)
 	)
 )
 
 ; JGE etiq
-(defun JGE (vm etiq)
-	(if (or (equal (get vm 'DPG) 1) (equal (get vm 'DEQ) 1)
-		(JMP etiq)
+(defun vm-jge (vm etiq)
+	(if (or (equal (get vm 'DPG) 1) (equal (get vm 'DEQ) 1))
+		(vm-jmp etiq)
 	)
 )
 
 ; JPE etiq
-(defun JPE (vm etiq)
-	(if (or (equal (get vm 'DPP) 1) (equal (get vm 'DEQ) 1)
-		(JMP etiq)
+(defun vm-jpe (vm etiq)
+	(if (or (equal (get vm 'DPP) 1) (equal (get vm 'DEQ) 1))
+		(vm-jmp etiq)
 	)
 )
 
 ; JMP etiq
-(defun JMP (vm etiq)
+(defun vm-jmp (vm etiq)
 	(setf (get vm 'PC) (gethash etiq (get vm 'labels)))
 )
 
 ; JSR etiq
-(defun JSR (vm etiq)
-	(PUSH (get vm 'RA))
-	(JMP etiq)
+(defun vm-jsr (vm etiq)
+	(vm-push (get vm 'RA))
+	(vm-jmp etiq)
 )
 
 ; RTN
-(defun RTN (vm)
-	(POP P1)
-	(JMP P1)
+(defun vm-rtn (vm)
+	(vm-pop P1)
+	(vm-jmp P1)
 )
 
 ; CMP P1 P2
-(defun CMP (vm P1 P2) 
-	(cond
-		((equal (get vm P2) (get vm P1)) (setf (get vm 'DEQ) 1))
-		((lt (get vm P2) (get vm P1)) (setf (get vm 'DPP) 1))
-		((gt (get vm P2) (get vm P1)) (setf (get vm 'DPG) 1))
+(defun vm-cmp-atom (vm P1 P2)
+	(if (atom P1)
+		(cond
+			((equal (get vm P2) (get vm P1)) (set-flag-DEQ vm))
+			((< (get vm P2) (get vm P1)) (set-flag-DPP vm))
+			((> (get vm P2) (get vm P1)) (set-flag-DPG vm))
+		)
+		(vm-cmp-reg vm P1 P2)
 	)
 ) 
+
+(defun vm-cmp-reg (vm P1 P2)
+	(if (atom P1)
+		(vm-cmp-atom vm P1 P2)
+		(cond
+			((equal (get vm P2) (get vm P1)) (set-flag-DEQ vm))
+			((< (get vm P2) (get vm P1)) (set-flag-DPP vm))
+			((> (get vm P2) (get vm P1)) (set-flag-DPG vm))
+		)
+
+	)
+) 
+(defun vm-cmp (vm P1 P2)
+	(if (atom P1)
+		(vm-cmp-atom vm P1 P2)
+		(vm-cmp-reg vm P1 P2)
+	)
+)
+
+
+;;A copier dans machine.lisp
+(defun set-flag-DEQ (vm)
+	(set-Symb vm 'DEQ 1)
+	(set-Symb vm 'DPG 0)
+	(set-Symb vm 'DPP 0)
+)
+
+(defun set-flag-DPG (vm)
+	(set-Symb vm 'DEQ 0)
+	(set-Symb vm 'DPG 1)
+	(set-Symb vm 'DPP 0)
+)
+
+(defun set-flag-DPP (vm)
+	(set-Symb vm 'DEQ 0)
+	(set-Symb vm 'DPG 0)
+	(set-Symb vm 'DPP 1)
+)
 ;;HALT 
 (defun HALT (vm)
-	(setf (get vm 'inst) 0)
+	(setf (get vm 'state) 0)
 )
