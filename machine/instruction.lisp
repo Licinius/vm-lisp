@@ -120,3 +120,7 @@
 		((gt (get vm P2) (get vm P1)) (setf (get vm 'DPG) 1))
 	)
 ) 
+;;HALT 
+(defun HALT (vm)
+	(setf (get vm 'inst) 0)
+)
