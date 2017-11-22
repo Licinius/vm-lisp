@@ -143,6 +143,13 @@
 		(vm-cmp-reg vm P1 P2)
 	)
 )
+;;HALT 
+(defun vm-halt (vm)
+	(set-Symb vm 'state 1)
+)
+
+;;NOP
+(defun vm-nop (vm))
 
 
 ;;A copier dans machine.lisp
@@ -162,8 +169,4 @@
 	(set-Symb vm 'DEQ 0)
 	(set-Symb vm 'DPG 0)
 	(set-Symb vm 'DPP 1)
-)
-;;HALT 
-(defun HALT (vm)
-	(setf (get vm 'state) 0)
 )
