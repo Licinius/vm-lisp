@@ -10,9 +10,7 @@
 	(set-Symb nom 'PC 0)
 	
 	;; Flag
-	(set-Symb nom 'DPG 0)
-	(set-Symb nom 'DEQ 0)
-	(set-Symb nom 'DPP 0)
+	(set-flag-init vm)
 
 	;; Register
 	(set-Symb nom 'R0 0)
@@ -40,21 +38,23 @@
 		)
 	)
 )
-
-(defun set-flag-DEQ (vm)
-	(set-Symb vm 'DEQ 1)
+(defun set-flag-init (vm)
+	(set-Symb vm 'DEQ 0)
 	(set-Symb vm 'DPG 0)
 	(set-Symb vm 'DPP 0)
+
+)
+(defun set-flag-DEQ (vm)
+	(set-flag-init vm)
+	(set-Symb vm 'DEQ 1)
 )
 
 (defun set-flag-DPG (vm)
-	(set-Symb vm 'DEQ 0)
+	(set-flag-init vm)
 	(set-Symb vm 'DPG 1)
-	(set-Symb vm 'DPP 0)
 )
 
 (defun set-flag-DPP (vm)
-	(set-Symb vm 'DEQ 0)
-	(set-Symb vm 'DPG 0)
+	(set-flag-init vm)
 	(set-Symb vm 'DPP 1)
 )
