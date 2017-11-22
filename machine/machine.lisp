@@ -3,21 +3,40 @@
 
 (defun make-vm (nom &optional (taille 1000))
 	(init-mem nom taille)
-	;;(init-vm-mem (get nom 'mem))
+
 	(set-Symb nom 'labels (make-hash-table))
 	(set-Symb nom 'SP taille)
 	(set-Symb nom 'RA 0)
 	(set-Symb nom 'PC 0)
 	
-	;;Flag
+	;; Flag
 	(set-Symb nom 'DPG 0)
 	(set-Symb nom 'DEQ 0)
 	(set-Symb nom 'DPP 0)
 
+	;; Register
 	(set-Symb nom 'R0 0)
 	(set-Symb nom 'R1 0)
 	(set-Symb nom 'R2 0)
 
-	(set-Symb nom 'inst 0)
+	;; VM State (0 on, 1 off)
+	(set-Symb nom 'state 0)
 )
 
+(defun loader (vm instr &optional(ptr 0))
+	(cond
+		((not (equal (car instr) NIL))
+			(cond
+				(
+					(equal(caar instr) "LABEL")
+						(setf (gethash (cadar instr) (get vm 'labels)) ptr)
+						(loader vm (cdr instr) ptr)
+				)
+				(
+					(setf (aref (get vm 'mem) ptr) (car instr))
+					(loader vm (cdr instr) (+ ptr 1))
+				)
+			)
+		)
+	)
+)
