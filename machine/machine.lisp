@@ -1,5 +1,9 @@
-(defun make-vm (nom &optional(taille 250))
-	(set-Symb nom 'mem (make-array taille))
+(defun set-Symb (vm nom val) (setf (get vm nom) val) )
+
+
+(defun make-vm (nom &optional (taille 1000))
+	(set-Symb nom 'mem (make-array taille :initial-element 0))
+	;;(init-vm-mem (get nom 'mem))
 	(set-Symb nom 'labels (make-hash-table))
 	(set-Symb nom 'SP taille)
 	(set-Symb nom 'RA 0)
@@ -18,4 +22,3 @@
 
 )
 
-(defun set-Symb (vm nom val) (setf (get vm nom) val) )
