@@ -153,16 +153,16 @@
 
 ;;CAR R
 (defun vm-car (vm P)
-	;;TO DO
+	(car (get vm P))
 )
 
 ;;CDR R
 (defun vm-cdr (vm P)
-	;;TO DO
+	(cdr (get vm P))
 )
 ;;CONS R1 R2
 (defun vm-cons (vm P1 P2)
-	;;TO DO
+	(setf (get vm P1) (cons (get vm P1) (get vm P2)))
 )
 
 
