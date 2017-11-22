@@ -151,6 +151,20 @@
 ;;NOP
 (defun vm-nop (vm))
 
+;;CAR R
+(defun vm-car (vm P)
+	;;TO DO
+)
+
+;;CDR R
+(defun vm-cdr (vm P)
+	;;TO DO
+)
+;;CONS R1 R2
+(defun vm-cons (vm P1 P2)
+	;;TO DO
+)
+
 
 ;;A copier dans machine.lisp
 (defun set-flag-DEQ (vm)
