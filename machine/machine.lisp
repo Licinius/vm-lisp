@@ -11,6 +11,8 @@
 	(set-Symb nom 'DPP 0)
 
 	(set-Symb nom 'R0 0)
+	(set-Symb nom 'R1 0)
+	(set-Symb nom 'R2 0)
 
 	(set-Symb nom 'inst 0)
 
