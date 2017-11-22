@@ -40,3 +40,21 @@
 		)
 	)
 )
+
+(defun set-flag-DEQ (vm)
+	(set-Symb vm 'DEQ 1)
+	(set-Symb vm 'DPG 0)
+	(set-Symb vm 'DPP 0)
+)
+
+(defun set-flag-DPG (vm)
+	(set-Symb vm 'DEQ 0)
+	(set-Symb vm 'DPG 1)
+	(set-Symb vm 'DPP 0)
+)
+
+(defun set-flag-DPP (vm)
+	(set-Symb vm 'DEQ 0)
+	(set-Symb vm 'DPG 0)
+	(set-Symb vm 'DPP 1)
+)
