@@ -1,13 +1,13 @@
-(require "instruction.lisp")
-(require "machine.lisp")
+("LABEL" FACT-S)
+("MOVE" 1 R2)
+("JMP" FACT)
 
-(make-vm 'vm 25)
+("LABEL" FACT)
+("CMP" 1 R1)
+("JPE" end)
+("MULT" R2 R1)
+("DECR" R1)
+("JMP" FACT)
 
-
-(loader 'vm l)
-
-; (get 'vm 'labels)
-
-(get 'vm 'mem)
-
-(exec-vm 'vm)
+("LABEL" END)
+("MOVE" R2 R0)
