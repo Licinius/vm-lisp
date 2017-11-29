@@ -1,5 +1,3 @@
-(require "machine.lisp")
-
 ; MOVE P1 P2
 (defun vm-move (vm P1 P2)
 	(if (atom P1)
@@ -15,17 +13,20 @@
 
 ; STORE P adr
 (defun vm-store (vm P adr)
-	(setf (aref (get vm 'mem) adr) (get vm P))
+	(if (atom P)
+		(setf (aref (get vm 'mem) adr) P)
+		(setf (aref (get vm 'mem) adr) (get vm P))
+	)
 )
 
 ; INCR P
 (defun vm-incr (vm P)
-	(setf (get vm P) (+ (get vm P) 1))
+	(incf (get vm P))
 )
 
 ; DECR P
 (defun vm-decr (vm P)
-	(setf (get vm P) (- (get vm P) 1))
+	(decf (get vm P))
 )
 
 ; ADD P1 P2
@@ -50,50 +51,50 @@
 	)
 )
 
-; PUSH P1
-(defun vm-push (vm P1)
-	(vm-decr (get vm 'SP))
-	(vm-store P1 (get vm 'SP))
+; PUSH P
+(defun vm-push (vm P)
+	(vm-decr vm 'SP)
+	(vm-store vm P (get vm 'SP))
 )
 
-; POP P1
-(defun vm-pop (vm P1)
-	(vm-load (get vm 'SP) P1)
-	(vm-decr (get vm 'SP))
+; POP P
+(defun vm-pop (vm P)
+	(vm-load vm (get vm 'SP) P)
+	(vm-decr vm (get vm 'SP))
 )
 
 ; JPG etiq
 (defun vm-jpg (vm etiq)
 	(if (equal (get vm 'DPG) 1)
-		(vm-jmp etiq)
+		(vm-jmp vm etiq)
 	)
 )
 
 ; JEQ etiq
 (defun vm-jeq (vm etiq)
 	(if (equal (get vm 'DEQ) 1)
-		(vm-jmp etiq)
+		(vm-jmp vm etiq)
 	)
 )
 
 ; JPP etiq
 (defun vm-jpp (vm etiq)
 	(if (equal (get vm 'DPP) 1)
-		(vm-jmp etiq)
+		(vm-jmp vm etiq)
 	)
 )
 
 ; JGE etiq
 (defun vm-jge (vm etiq)
 	(if (or (equal (get vm 'DPG) 1) (equal (get vm 'DEQ) 1))
-		(vm-jmp etiq)
+		(vm-jmp vm etiq)
 	)
 )
 
 ; JPE etiq
 (defun vm-jpe (vm etiq)
 	(if (or (equal (get vm 'DPP) 1) (equal (get vm 'DEQ) 1))
-		(vm-jmp etiq)
+		(vm-jmp vm etiq)
 	)
 )
 
@@ -104,37 +105,30 @@
 
 ; JSR etiq
 (defun vm-jsr (vm etiq)
-	(vm-push (get vm 'RA))
-	(vm-jmp etiq)
+	(vm-push vm (get vm 'RA))
+	(vm-jmp vm etiq)
 )
 
 ; RTN
 (defun vm-rtn (vm)
-	(vm-pop P1)
-	(vm-jmp P1)
+	(vm-pop vm (get vm 'R0))
+	(vm-jmp vm (get vm 'R0))
 )
 
 ; CMP P1 P2
 (defun vm-cmp-atom (vm P1 P2)
-	(if (atom P1)
-		(cond
-			((equal (get vm P2) (get vm P1)) (set-flag-DEQ vm))
-			((< (get vm P2) (get vm P1)) (set-flag-DPP vm))
-			((> (get vm P2) (get vm P1)) (set-flag-DPG vm))
-		)
-		(vm-cmp-reg vm P1 P2)
+	(cond
+		((equal (get vm P2) P1) (set-flag-DEQ vm))
+		((< (get vm P2) P1) (set-flag-DPP vm))
+		((> (get vm P2) P1) (set-flag-DPG vm))
 	)
 ) 
 
 (defun vm-cmp-reg (vm P1 P2)
-	(if (atom P1)
-		(vm-cmp-atom vm P1 P2)
-		(cond
-			((equal (get vm P2) (get vm P1)) (set-flag-DEQ vm))
-			((< (get vm P2) (get vm P1)) (set-flag-DPP vm))
-			((> (get vm P2) (get vm P1)) (set-flag-DPG vm))
-		)
-
+	(cond
+		((equal (get vm P2) (get vm P1)) (set-flag-DEQ vm))
+		((< (get vm P2) (get vm P1)) (set-flag-DPP vm))
+		((> (get vm P2) (get vm P1)) (set-flag-DPG vm))
 	)
 ) 
 (defun vm-cmp (vm P1 P2)

@@ -1,8 +1,13 @@
+(require "instruction.lisp")
+(require "machine.lisp")
+
 (make-vm 'vm 25)
 
-(setf l (cons (list "MOVE" "R1" 1) (cons (list "LABEL" "FACT") (cons (list "MOVE" "R2" 2) NIL))))
 
 (loader 'vm l)
 
+; (get 'vm 'labels)
+
 (get 'vm 'mem)
-(get 'vm 'labels)
+
+(exec-vm 'vm)

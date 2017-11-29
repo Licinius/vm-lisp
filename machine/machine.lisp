@@ -1,5 +1,11 @@
 (defun set-Symb (vm nom val) (setf (get vm nom) val) )
-(defun init-mem (nom &optional(taille 1000)) (set-Symb nom 'mem (make-array taille :initial-element 0)) )
+(defun init-mem (nom &optional(taille 1000)) (set-Symb nom 'mem (make-array taille)) )
+(defun set-flag-init (vm)
+	(set-Symb vm 'DEQ 0)
+	(set-Symb vm 'DPG 0)
+	(set-Symb vm 'DPP 0)
+
+)
 
 (defun make-vm (nom &optional (taille 1000))
 	(init-mem nom taille)
@@ -10,7 +16,7 @@
 	(set-Symb nom 'PC 0)
 	
 	;; Flag
-	(set-flag-init vm)
+	(set-flag-init nom)
 
 	;; Register
 	(set-Symb nom 'R0 0)
@@ -38,12 +44,7 @@
 		)
 	)
 )
-(defun set-flag-init (vm)
-	(set-Symb vm 'DEQ 0)
-	(set-Symb vm 'DPG 0)
-	(set-Symb vm 'DPP 0)
 
-)
 (defun set-flag-DEQ (vm)
 	(set-flag-init vm)
 	(set-Symb vm 'DEQ 1)
@@ -57,4 +58,13 @@
 (defun set-flag-DPP (vm)
 	(set-flag-init vm)
 	(set-Symb vm 'DPP 1)
+)
+
+(defun exec-vm (vm)
+	(loop while (not (or (equal (aref (get vm 'mem) (get vm 'PC)) NIL) (equal (get vm 'state) 1)))
+		do (cond 
+			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) "PUSH") (vm-push vm (nth 1 (aref (get vm 'mem) (get vm 'PC)))) )
+		)
+		(incf (get vm 'PC))
+	)
 )
