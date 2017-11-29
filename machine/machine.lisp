@@ -62,7 +62,9 @@
 
 (defun exec-vm (vm)
 	(loop while (not (or (equal (aref (get vm 'mem) (get vm 'PC)) NIL) (equal (get vm 'state) 1)))
-		do (cond 
+		do
+			(write (get vm 'PC))
+			(cond 
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) "MOVE") (vm-move vm (nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC)))) )
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) "LOAD") (vm-load vm (nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC)))) )
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) "STORE") (vm-store vm (nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC)))) )
@@ -90,4 +92,5 @@
 		)
 		(incf (get vm 'PC))
 	)
+	"La VM est fermé"
 )

@@ -1,8 +1,8 @@
 ; MOVE P1 P2
 (defun vm-move (vm P1 P2)
-	(if (atom P1)
-		(setf (get vm P2) P1)
+	(if (symbolp P1)
 		(setf (get vm P2) (get vm P1))
+		(setf (get vm P2) P1)
 	)
 )
 
@@ -13,9 +13,9 @@
 
 ; STORE P adr
 (defun vm-store (vm P adr)
-	(if (atom P)
-		(setf (aref (get vm 'mem) adr) P)
+	(if (symbolp P)
 		(setf (aref (get vm 'mem) adr) (get vm P))
+		(setf (aref (get vm 'mem) adr) P)
 	)
 )
 
@@ -100,7 +100,7 @@
 
 ; JMP etiq
 (defun vm-jmp (vm etiq)
-	(setf (get vm 'PC) (gethash etiq (get vm 'labels)))
+	(setf (get vm 'PC) (- (gethash etiq (get vm 'labels)) 1))
 )
 
 ; JSR etiq
@@ -115,7 +115,7 @@
 	(vm-jmp vm (get vm 'R0))
 )
 
-; CMP P1 P2
+; CMP atom P2
 (defun vm-cmp-atom (vm P1 P2)
 	(cond
 		((equal (get vm P2) P1) (set-flag-DEQ vm))
@@ -124,37 +124,40 @@
 	)
 ) 
 
+; CMP P1 P2
 (defun vm-cmp-reg (vm P1 P2)
 	(cond
 		((equal (get vm P2) (get vm P1)) (set-flag-DEQ vm))
 		((< (get vm P2) (get vm P1)) (set-flag-DPP vm))
 		((> (get vm P2) (get vm P1)) (set-flag-DPG vm))
 	)
-) 
+)
+
+; CMP P1 P2
 (defun vm-cmp (vm P1 P2)
-	(if (atom P1)
-		(vm-cmp-atom vm P1 P2)
+	(if (symbolp P1)
 		(vm-cmp-reg vm P1 P2)
+		(vm-cmp-atom vm P1 P2)
 	)
 )
-;;HALT 
+; HALT 
 (defun vm-halt (vm)
 	(set-Symb vm 'state 1)
 )
 
-;;NOP
+; NOP
 (defun vm-nop (vm))
 
-;;CAR R
+; CAR P
 (defun vm-car (vm P)
 	(car (get vm P))
 )
 
-;;CDR R
+; CDR P
 (defun vm-cdr (vm P)
 	(cdr (get vm P))
 )
-;;CONS R1 R2
+; CONS P1 P2
 (defun vm-cons (vm P1 P2)
 	(setf (get vm P1) (cons (get vm P1) (get vm P2)))
 )
