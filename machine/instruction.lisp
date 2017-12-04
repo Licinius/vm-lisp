@@ -60,7 +60,7 @@
 ; POP P
 (defun vm-pop (vm P)
 	(vm-load vm (get vm 'SP) P)
-	(vm-decr vm (get vm 'SP))
+	(vm-incr vm 'SP)
 )
 
 ; JPG etiq
@@ -105,14 +105,13 @@
 
 ; JSR etiq
 (defun vm-jsr (vm etiq)
-	(vm-push vm (get vm 'RA))
+	(setf (get vm 'RA) (+ (get vm 'PC) 1))
 	(vm-jmp vm etiq)
 )
 
 ; RTN
 (defun vm-rtn (vm)
-	(vm-pop vm (get vm 'R0))
-	(vm-jmp vm (get vm 'R0))
+	(setf (get vm 'PC) (get vm 'RA))
 )
 
 ; CMP atom P2
@@ -140,6 +139,7 @@
 		(vm-cmp-atom vm P1 P2)
 	)
 )
+
 ; HALT 
 (defun vm-halt (vm)
 	(set-Symb vm 'state 1)
@@ -157,9 +157,17 @@
 (defun vm-cdr (vm P)
 	(cdr (get vm P))
 )
+
 ; CONS P1 P2
 (defun vm-cons (vm P1 P2)
 	(setf (get vm P1) (cons (get vm P1) (get vm P2)))
 )
 
+; WRITE P
+(defun vm-write (vm P)
+	(if (symbolp P)
+		(write (get vm P))
+		(write P)
+	)
+)
 

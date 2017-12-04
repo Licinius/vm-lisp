@@ -1,9 +1,8 @@
-(require "instruction.lisp")
 (require "machine.lisp")
 
-(make-vm 'vm 25)
+(make-vm 'vm 100)
 
-(setf l1
+(setf test1
 	'( 
 		("PUSH" 1)
 		("JMP" YOHO)
@@ -15,28 +14,56 @@
 	)
 )
 
-(setf l2
+
+(setf fact
 	'( 
-		("LABEL" FACT-S)
+	("LABEL" FACT-S)
 		("MOVE" 1 R2)
 		("JMP" FACT)
 
-		("LABEL" FACT)
+	("LABEL" FACT)
 		("CMP" 1 R1)
-		("JPE" end)
+		("JPE" END)
 		("MULT" R2 R1)
 		("DECR" R1)
 		("JMP" FACT)
 
-		("LABEL" END)
+	("LABEL" END)
 		("MOVE" R2 R0)
 	)
 )
 
-(loader 'vm l)
+(setf fact2
+	'(
 
-(get 'vm 'labels)
+		("WRITE" "FACT(")
+		("WRITE" R1)
+		("WRITE" ") = ")
+		("JSR" FACT)
+		("WRITE" "")
+		("WRITE" R0)
+		("HALT")
 
-(get 'vm 'mem)
+	("LABEL" FACT)
+		("MOVE" R1 R0)
+	("LABEL" BOUCLE)
+		("CMP" 2 R1)
+		("JPP" END)
+		("DECR" R1)
+		("MULT" R1 R0)
+		("JMP" BOUCLE)
+
+	("LABEL" END)
+		("RTN")
+	)
+)
+
+
+(loader 'vm fact2)
+(setf (get 'vm 'R1) 4)
+; fact(4)
+
+; (get 'vm 'labels)
+; (get 'vm 'mem)
 
 (exec-vm 'vm)
