@@ -105,7 +105,7 @@
 
 ; JSR etiq
 (defun vm-jsr (vm etiq)
-	(setf (get vm 'RA) (+ (get vm 'PC) 1))
+	(setf (get vm 'RA) (get vm 'PC))
 	(vm-jmp vm etiq)
 )
 
