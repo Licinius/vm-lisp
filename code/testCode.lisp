@@ -2,6 +2,7 @@
 
 (make-vm 'vm 100)
 
+; (+ (* 2 3) 4))
 (setf test1
 	'( 
 		(MOVE 2 R0)
@@ -41,79 +42,28 @@
 	)
 )
 
-(MOVE 2 R1)
-(MULT 3 R1)
-(ADD 4 R1)
-
-
-(loader 'vm test1)
-(setf (get 'vm 'R1) 4)
+; (setf (get 'vm 'R1) 4)
 
 ; (get 'vm 'labels)
 ; (get 'vm 'mem)
 
-(exec-vm 'vm)
-
-
-
-(setf expr '(+ (* 2 3) 4))
-(write (first expr))
-(write (second expr))
-(write (third expr))
-(eql (nth 0 expr) +)
-
-(compile-expr expr)
-
-(defun compile-expr2(expr)
-	(cond	
-		( (atom expr) (format t "~a " expr) )
-		( t	(cond
-				( (equal (first expr) '+) (format t "~a ~%" 'ADD) (compile-expr (second expr) ) (compile-expr (third expr)) )
-				( (equal (first expr) '-) (format t "~a ~%" 'SUB) (compile-expr (second expr) ) (compile-expr (third expr) ) )
-				( (equal (first expr) '*) (format t "~a ~%" 'MULT) (compile-expr (second expr) ) (compile-expr (third expr) ) )
-				( (equal (first expr) '/) (format t "~a ~%" 'DIV) (compile-expr (second expr) ) (compile-expr (third expr) ) )
-			)
-		)
-	)
-)
-
-
-
-(defun compile-expr (expr)
-	(cond	
-		( (atom expr) (format t "MOVE ~a R0~%" expr) )
-		( t	
-			(compile-expr (second expr))
-			(format t "MOVE R0 R1~%") 
-			(compile-expr (third expr)) 
-			(format t "MOVE R0 R2~%")
-			(cond
-				( (equal (first expr) '+) (format t "~a R1 R2~%" 'ADD) )
-				( (equal (first expr) '-) (format t "~a R1 R2~%" 'SUB) )
-				( (equal (first expr) '*) (format t "~a R1 R2~%" 'MULT))
-				( (equal (first expr) '/) (format t "~a R1 R2~%" 'DIV) )
-			)
-			(format t "MOVE R2 R0~%")
-		)
-	)
-)
-
-
-
+; (setf expr '(+ (* 2 3) 4))
+; (compile-expr expr)
 
 (setf code '())
-
 (let ((in (open "../code/ASM.lisp" :if-does-not-exist nil)))
-  (when in
-    (loop do 
-    	(setf cpt 0)
-    	(setf line (read in nil))
-    	(format t "~a ~%" line)
-    	; (setq code (cons (cdr code) line))
-    	(setq code (append code line))
-    	(setf cpt (+ cpt 1))
-        while (not (equal line nil))
-     )
-    (close in)
-    )
+	(when in
+		(setf line (read in nil))
+		(loop while (not (equal line nil))
+			do
+			(format t "~a ~%" line)
+			; (setq code (cons (cdr code) line))
+			(setq code (append code (list line)))
+			(setf line (read in nil))
+		)
+		(close in)
+	)
 )
+
+(loader 'vm code)
+(exec-vm 'vm)

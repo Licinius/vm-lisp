@@ -97,3 +97,23 @@
 	)
 	"Fin de VM"
 )
+
+(defun compile-expr (expr)
+	(cond	
+		( (atom expr) (format t "(MOVE ~a R0)~%" expr) )
+		( t	
+			(compile-expr (second expr))
+			(format t "(MOVE R0 R1)~%") 
+			(compile-expr (third expr)) 
+			(format t "(MOVE R0 R2)~%")
+			(cond
+				( (equal (first expr) '+) (format t "(~a R1 R2)~%" 'ADD) )
+				( (equal (first expr) '-) (format t "(~a R1 R2)~%" 'SUB) )
+				( (equal (first expr) '*) (format t "(~a R1 R2)~%" 'MULT))
+				( (equal (first expr) '/) (format t "(~a R1 R2)~%" 'DIV) )
+			)
+			(format t "(MOVE R2 R0)~%")
+		)
+	)
+	'(WRITE R0)
+)
