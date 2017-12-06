@@ -1,0 +1,7 @@
+("PUSH" 1)
+("JMP" YOHO)
+("PUSH" 2)
+("LABEL" YOHO)
+("PUSH" 3)
+("PUSH" 4)
+("HALT")
