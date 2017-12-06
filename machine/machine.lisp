@@ -99,12 +99,34 @@
 )
 
 (defun compile-expr (expr)
+	(let (comp)
+		(cond	
+			( (atom expr) (setf comp (format nil "(MOVE ~a R0)~%" expr)) )
+			( t	
+				(setf comp (concatenate 'string comp (compile-expr (second expr) )))
+				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
+				(setf comp (concatenate 'string comp (compile-expr (third expr) )))
+				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R2)~%")))
+				(cond
+					( (equal (first expr) '+) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'ADD)))	)
+					( (equal (first expr) '-) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'SUB)))	)
+					( (equal (first expr) '*) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'MULT)))	)
+					( (equal (first expr) '/) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'DIV)))	)
+				)
+				(setf comp (concatenate 'string comp (format nil "(MOVE R2 R0)~%")))
+			)
+		)
+		(return-from compile-expr comp)
+	)
+)
+
+(defun compile-expr2 (expr)
 	(cond	
 		( (atom expr) (format t "(MOVE ~a R0)~%" expr) )
 		( t	
-			(compile-expr (second expr))
+			(compile-expr2 (second expr))
 			(format t "(MOVE R0 R1)~%") 
-			(compile-expr (third expr)) 
+			(compile-expr2 (third expr)) 
 			(format t "(MOVE R0 R2)~%")
 			(cond
 				( (equal (first expr) '+) (format t "(~a R1 R2)~%" 'ADD) )
@@ -115,5 +137,26 @@
 			(format t "(MOVE R2 R0)~%")
 		)
 	)
-	'(WRITE R0)
+)
+
+(defun rideFaïle (path)
+	(let ((fin (open path :if-does-not-exist :error :direction :input)))
+		(setf obj '())
+		(when fin
+			(setf line (read fin))
+			(loop while (not (equal line nil)) do
+				(setq obj (append obj (list line)))
+				(setf line (read fin))
+			)
+			(close fin)
+		)
+		(return-from rideFaïle obj)
+	)
+)
+
+(defun raïteFaïle (path str)
+	(let ((fout (open path :if-does-not-exist :create :if-exists :supersede :direction :io)))
+		(format fout str)
+		(close fout)
+	)
 )
