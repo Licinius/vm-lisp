@@ -120,43 +120,72 @@
 	)
 )
 
-(defun compile-expr2 (expr)
-	(cond	
-		( (atom expr) (format t "(MOVE ~a R0)~%" expr) )
-		( t	
-			(compile-expr2 (second expr))
-			(format t "(MOVE R0 R1)~%") 
-			(compile-expr2 (third expr)) 
-			(format t "(MOVE R0 R2)~%")
-			(cond
-				( (equal (first expr) '+) (format t "(~a R1 R2)~%" 'ADD) )
-				( (equal (first expr) '-) (format t "(~a R1 R2)~%" 'SUB) )
-				( (equal (first expr) '*) (format t "(~a R1 R2)~%" 'MULT))
-				( (equal (first expr) '/) (format t "(~a R1 R2)~%" 'DIV) )
-			)
-			(format t "(MOVE R2 R0)~%")
-		)
-	)
-)
-
-(defun rideFaïle (path)
-	(let ((fin (open path :if-does-not-exist :error :direction :input)))
+(defun readFile (path)
+	(let ( (fin (open path :if-does-not-exist :error :direction :input)) )
 		(setf obj '())
-		(when fin
-			(setf line (read fin))
-			(loop while (not (equal line nil)) do
-				(setq obj (append obj (list line)))
-				(setf line (read fin))
-			)
-			(close fin)
+		(setf line (read fin nil nil nil))
+		(loop while (not (equal line nil)) do
+			(write line)
+			(setq obj (append obj (list line)))
+			(setf line (read fin nil nil nil))
 		)
-		(return-from rideFaïle obj)
+		(close fin)
+		(return-from readFile obj)
 	)
 )
 
-(defun raïteFaïle (path str)
+(defun writeFile (path str)
 	(let ((fout (open path :if-does-not-exist :create :if-exists :supersede :direction :io)))
 		(format fout str)
 		(close fout)
 	)
+)
+
+(defun mdefun (nom code)
+	(set-Symb nom 'code code)
+	(set-Symb nom 'comp (compile code) )
+)
+
+
+; ordre execution :
+; 	print CMP
+; 	stocker false
+; 	jump cond pc + taille false
+; 	print false
+; 	stocke true
+; 	jump pc + taille true
+; 	print true
+(defun compile-if ()
+
+
+
+	; in first arg of if (bool)
+		(setf comp (concatenate 'string comp (compile-expr (second (first expr))) ))
+		(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
+		(setf comp (concatenate 'string comp (compile-expr (third (first expr))) ))
+		(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
+		(setf comp (concatenate 'string comp (format nil "(POP R2)~%")))
+		(setf comp (concatenate 'string comp (format nil "(CMP R1 R2)~%")))
+	
+	(compile (third expr))
+	(compile (fourth expr))
+
+	(cond
+		( (equal (first (second expr)) '<)
+			(setf comp (concatenate 'string comp (format nil "(JPP ~a)~%" somewhere)))
+		)
+		( (equal (first (second expr)) '>) ()
+			(setf comp (concatenate 'string comp (format nil "(JPG ~a)~%" somewhere)))
+		)
+		( (equal (first (second expr)) '=) ()
+			(setf comp (concatenate 'string comp (format nil "(JEQ ~a)~%" somewhere)))
+		) 
+		( (equal (first (second expr)) '<=) ()
+			(setf comp (concatenate 'string comp (format nil "(JPE ~a)~%" somewhere)))
+		) 
+		( (equal (first (second expr)) '>=) ()
+			(setf comp (concatenate 'string comp (format nil "(JGE ~a)~%" somewhere)))
+		)
+	)
+	
 )

@@ -49,14 +49,18 @@
 
 (require "machine.lisp")
 
+(make-vm 'vm 100)
+
 (setf expr '(+ (* 2 3) 4))
 (setf chemin "../code/ASM.lisp")
 (setf str
 	(compile-expr expr)
 )
 
-(raïteFaïle chemin str)
+(writeFile chemin str)
 
-(setf code (rideFaïle chemin))
+(setf code (readFile chemin))
+; (setf code nil)
+; (readFile chemin code)
 (loader 'vm code)
 (exec-vm 'vm)
