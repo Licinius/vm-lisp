@@ -98,14 +98,14 @@
 	"Fin de VM"
 )
 
-(defun compile-expr (expr)
+(defun compile-expr (vm expr)
 	(let (comp)
 		(cond	
 			( (atom expr) (setf comp (format nil "(MOVE ~a R0)~%" expr)) )
 			( t	
-				(setf comp (concatenate 'string comp (compile-expr (second expr) )))
+				(setf comp (concatenate 'string comp (compile-expr vm (second expr) )))
 				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
-				(setf comp (concatenate 'string comp (compile-expr (third expr) )))
+				(setf comp (concatenate 'string comp (compile-expr vm (third expr) )))
 				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R2)~%")))
 				(cond
 					( (equal (first expr) '+) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'ADD)))	)
@@ -141,12 +141,23 @@
 	)
 )
 
-(defun mdefun (nom code)
+(defun mdefun (nom params code)
+	(set-Symb nom 'params params)
+	(set-Symb nom 'nbP (list-length params))
 	(set-Symb nom 'code code)
-	(set-Symb nom 'comp (compile code) )
 )
-
-
+(defun compile-comp(vm expr)
+	(let (comp)
+		(write expr)
+		(setf comp (concatenate 'string comp (compile-expr vm (second  expr)) ))
+		(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
+		(setf comp (concatenate 'string comp (compile-expr vm (third  expr)) ))
+		(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
+		(setf comp (concatenate 'string comp (format nil "(POP R2)~%")))
+		(setf comp (concatenate 'string comp (format nil "(CMP R1 R2)~%")))
+		(return-from compile-comp comp)
+	)
+)
 ; ordre execution :
 ; 	print CMP
 ; 	stocker false
@@ -155,43 +166,53 @@
 ; 	stocke true
 ; 	jump pc + taille true
 ; 	print true
-(defun compile-if (expr)
+(defun compile-if (vm expr)
 
-
-	(let (true false length_t length_f) 
+	(let (comp true false length_t length_f) 
 		; in first arg of if (bool)
-		(setf comp (concatenate 'string comp (compile-expr (second (first expr))) ))
-		(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
-		(setf comp (concatenate 'string comp (compile-expr (third (first expr))) ))
-		(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
-		(setf comp (concatenate 'string comp (format nil "(POP R2)~%")))
-		(setf comp (concatenate 'string comp (format nil "(CMP R1 R2)~%")))
-		
-		(setq true (compile (third expr)))
-		(setf length_t (list-length true))
-		(setq false (compile (fourth expr)))
-		(setf length_f (list-length false))
+		(setf comp (concatenate 'string comp (compile-comp vm (second expr))) )
+
+		(setq true (compile-expr vm (third expr)))
+		(setf length_t (count #\newline true))
+		(setq false (compile-expr vm (fourth expr)))
+		(setf length_f (count #\newline false))
 		;;jump taille false plus 1 pour sauter le 'jump pc +taille true'
 		(cond
 			( (equal (first (second expr)) '<)
-				(setf comp (concatenate 'string comp (format nil "(JPP ~a)~%" somewhere)))
+				(setf comp (concatenate 'string comp (format nil "(JPP ~a)~%" (+ length_f 1))))
 			)
 			( (equal (first (second expr)) '>) ()
-				(setf comp (concatenate 'string comp (format nil "(JPG ~a)~%" somewhere)))
+				(setf comp (concatenate 'string comp (format nil "(JPG ~a)~%" (+ length_f 1))))
 			)
 			( (equal (first (second expr)) '=) ()
-				(setf comp (concatenate 'string comp (format nil "(JEQ ~a)~%" somewhere)))
+				(setf comp (concatenate 'string comp (format nil "(JEQ ~a)~%" (+ length_f 1))))
 			) 
 			( (equal (first (second expr)) '<=) ()
-				(setf comp (concatenate 'string comp (format nil "(JPE ~a)~%" somewhere)))
+				(setf comp (concatenate 'string comp (format nil "(JPE ~a)~%" (+ length_f 1))))
 			) 
 			( (equal (first (second expr)) '>=) ()
-				(setf comp (concatenate 'string comp (format nil "(JGE ~a)~%" somewhere)))
+				(setf comp (concatenate 'string comp (format nil "(JGE ~a)~%" (+ length_f 1))))
 			)
 		)
-		(format nil "~a ~%" false);;print false
-		;; jump après le true ---ici---
-		(format nil "~a ~%" true);;print true
+		(setf comp (concatenate 'string comp (format nil "~a" false)));;print false
+		(setf comp (concatenate 'string comp (format nil "(JMP ~a) ~%" length_t)))
+		(setf comp (concatenate 'string comp (format nil "~a" true)));;print true
+		(return-from compile-if comp)
 	)
 	
+)
+;;Compilation appel de fct 
+(defun compile-fctcall (vm call)
+	;;for taille code 
+)
+
+(defun compile-fct (fct)
+	(let (comp)
+		(setf comp (concatenate 'string comp (format nil "(LABEL ~a) ~%" fct)))
+		(loop for ()
+
+		)
+		(setf comp (concatenate 'string comp (compile (get fct 'code))))
+		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" fct)))
+	)
 )

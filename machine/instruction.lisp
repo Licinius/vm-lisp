@@ -100,7 +100,10 @@
 
 ; JMP etiq
 (defun vm-jmp (vm etiq)
-	(setf (get vm 'PC) (- (gethash etiq (get vm 'labels)) 1))
+	(if (integerp etiq)
+		(setf (get vm 'PC) (+ (get vm 'PC) etiq))
+		(setf (get vm 'PC) (- (gethash etiq (get vm 'labels)) 1))
+	)
 )
 
 ; JSR etiq

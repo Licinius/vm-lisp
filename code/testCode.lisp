@@ -41,8 +41,8 @@
 ; 		(RTN)
 ; 	)
 ; ; )
-
-; (setf (get 'vm 'R1) 4)
+(setf if_ '(if(<= 0 1) 0 1 ) )
+ ; (setf (get 'vm 'R1) 4)
 
 ; (get 'vm 'labels)
 ; (get 'vm 'mem)
@@ -52,13 +52,12 @@
 (make-vm 'vm 100)
 
 (setf expr '(+ (* 2 3) 4))
-(setf chemin "../code/ASM.lisp")
+(setf chemin "..\\code\\ASM.lisp")
 (setf str
-	(compile-expr expr)
+	(compile-if 'vm if_)
 )
 
 (writeFile chemin str)
-
 (setf code (readFile chemin))
 ; (setf code nil)
 ; (readFile chemin code)
