@@ -155,8 +155,34 @@
 		(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
 		(setf comp (concatenate 'string comp (format nil "(POP R2)~%")))
 		(setf comp (concatenate 'string comp (format nil "(CMP R1 R2)~%")))
+
+		(cond
+			( (equal (first expr) '<)
+				(setf comp (concatenate 'string comp (format nil "(JPP CMPTRUE) ~%")))
+			)
+			( (equal (first expr) '>) ()
+				(setf comp (concatenate 'string comp (format nil "(JPG CMPTRUE) ~%")))
+			)
+			( (equal (first expr) '=) ()
+				(setf comp (concatenate 'string comp (format nil "(JEQ CMPTRUE) ~%")))
+			) 
+			( (equal (first expr) '<=) ()
+				(setf comp (concatenate 'string comp (format nil "(JPE CMPTRUE) ~%")))
+			) 
+			( (equal (first expr) '>=) ()
+				(setf comp (concatenate 'string comp (format nil "(JGE CMPTRUE) ~%")))
+			)
+		)
+
+		(setf comp (concatenate 'string comp (format nil "(MOVE 0 R0) ~%")))
+		(setf comp (concatenate 'string comp (format nil "(JMP IFSUITE) ~%")))
+		(setf comp (concatenate 'string comp (format nil "(LABEL CMPTRUE) ~%")))
+		(setf comp (concatenate 'string comp (format nil "(MOVE 1 R0) ~%")))
+
+
 		(return-from compile-comp comp)
 	)
+
 )
 ; ordre execution :
 ; 	print CMP
@@ -171,29 +197,17 @@
 	(let (comp true false length_t length_f) 
 		; in first arg of if (bool)
 		(setf comp (concatenate 'string comp (compile-comp vm (second expr))) )
+		(setf comp (concatenate 'string comp (format nil "(LABEL IFSUITE) ~%")))
+
+		(setf comp (concatenate 'string comp (format nil "(CMP 1 R0) ~%")))
 
 		(setq true (compile-expr vm (third expr)))
 		(setf length_t (count #\newline true))
 		(setq false (compile-expr vm (fourth expr)))
 		(setf length_f (count #\newline false))
 		;;jump taille false plus 1 pour sauter le 'jump pc +taille true'
-		(cond
-			( (equal (first (second expr)) '<)
-				(setf comp (concatenate 'string comp (format nil "(JPP ~a)~%" (+ length_f 1))))
-			)
-			( (equal (first (second expr)) '>) ()
-				(setf comp (concatenate 'string comp (format nil "(JPG ~a)~%" (+ length_f 1))))
-			)
-			( (equal (first (second expr)) '=) ()
-				(setf comp (concatenate 'string comp (format nil "(JEQ ~a)~%" (+ length_f 1))))
-			) 
-			( (equal (first (second expr)) '<=) ()
-				(setf comp (concatenate 'string comp (format nil "(JPE ~a)~%" (+ length_f 1))))
-			) 
-			( (equal (first (second expr)) '>=) ()
-				(setf comp (concatenate 'string comp (format nil "(JGE ~a)~%" (+ length_f 1))))
-			)
-		)
+		
+		(setf comp (concatenate 'string comp (format nil "(JEQ ~a) ~%" (+ length_f 1))))
 		(setf comp (concatenate 'string comp (format nil "~a" false)));;print false
 		(setf comp (concatenate 'string comp (format nil "(JMP ~a) ~%" length_t)))
 		(setf comp (concatenate 'string comp (format nil "~a" true)));;print true
