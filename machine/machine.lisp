@@ -159,7 +159,7 @@
 
 
 	(let (true false length_t length_f) 
-		
+		; in first arg of if (bool)
 		(setf comp (concatenate 'string comp (compile-expr (second (first expr))) ))
 		(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
 		(setf comp (concatenate 'string comp (compile-expr (third (first expr))) ))
@@ -171,7 +171,7 @@
 		(setf length_t (list-length true))
 		(setq false (compile (fourth expr)))
 		(setf length_f (list-length false))
-		
+		;;jump taille false plus 1 pour sauter le 'jump pc +taille true'
 		(cond
 			( (equal (first (second expr)) '<)
 				(setf comp (concatenate 'string comp (format nil "(JPP ~a)~%" somewhere)))
@@ -189,8 +189,9 @@
 				(setf comp (concatenate 'string comp (format nil "(JGE ~a)~%" somewhere)))
 			)
 		)
-
-		(format nil "~a ~%" true)
+		(format nil "~a ~%" false);;print false
+		;; jump après le true ---ici---
+		(format nil "~a ~%" true);;print true
 	)
 	
 )
