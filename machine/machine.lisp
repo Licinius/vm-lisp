@@ -155,37 +155,42 @@
 ; 	stocke true
 ; 	jump pc + taille true
 ; 	print true
-(defun compile-if ()
+(defun compile-if (expr)
 
 
-
-	; in first arg of if (bool)
+	(let (true false length_t length_f) 
+		
 		(setf comp (concatenate 'string comp (compile-expr (second (first expr))) ))
 		(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
 		(setf comp (concatenate 'string comp (compile-expr (third (first expr))) ))
 		(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
 		(setf comp (concatenate 'string comp (format nil "(POP R2)~%")))
 		(setf comp (concatenate 'string comp (format nil "(CMP R1 R2)~%")))
-	
-	(compile (third expr))
-	(compile (fourth expr))
+		
+		(setq true (compile (third expr)))
+		(setf length_t (list-length true))
+		(setq false (compile (fourth expr)))
+		(setf length_f (list-length false))
+		
+		(cond
+			( (equal (first (second expr)) '<)
+				(setf comp (concatenate 'string comp (format nil "(JPP ~a)~%" somewhere)))
+			)
+			( (equal (first (second expr)) '>) ()
+				(setf comp (concatenate 'string comp (format nil "(JPG ~a)~%" somewhere)))
+			)
+			( (equal (first (second expr)) '=) ()
+				(setf comp (concatenate 'string comp (format nil "(JEQ ~a)~%" somewhere)))
+			) 
+			( (equal (first (second expr)) '<=) ()
+				(setf comp (concatenate 'string comp (format nil "(JPE ~a)~%" somewhere)))
+			) 
+			( (equal (first (second expr)) '>=) ()
+				(setf comp (concatenate 'string comp (format nil "(JGE ~a)~%" somewhere)))
+			)
+		)
 
-	(cond
-		( (equal (first (second expr)) '<)
-			(setf comp (concatenate 'string comp (format nil "(JPP ~a)~%" somewhere)))
-		)
-		( (equal (first (second expr)) '>) ()
-			(setf comp (concatenate 'string comp (format nil "(JPG ~a)~%" somewhere)))
-		)
-		( (equal (first (second expr)) '=) ()
-			(setf comp (concatenate 'string comp (format nil "(JEQ ~a)~%" somewhere)))
-		) 
-		( (equal (first (second expr)) '<=) ()
-			(setf comp (concatenate 'string comp (format nil "(JPE ~a)~%" somewhere)))
-		) 
-		( (equal (first (second expr)) '>=) ()
-			(setf comp (concatenate 'string comp (format nil "(JGE ~a)~%" somewhere)))
-		)
+		(format nil "~a ~%" true)
 	)
 	
 )
