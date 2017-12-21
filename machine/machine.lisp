@@ -219,14 +219,39 @@
 (defun compile-fctcall (vm call)
 	;;for taille code 
 )
-
+;;Disponible dans la documentation sur les strings
+;; Ne fait pas parti des ANSI Standard
+(defun replace-all (string part replacement &key (test #'char=))
+"Returns a new string in which all the occurences of the part 
+is replaced with replacement."
+    (with-output-to-string (out)
+      (loop with part-length = (length part)
+            for old-pos = 0 then (+ pos part-length)
+            for pos = (search part string
+                              :start2 old-pos
+                              :test test)
+            do (write-string string out
+                             :start old-pos
+                             :end (or pos (length string)))
+            when pos do (write-string replacement out)
+            while pos)))
+(defun replace-params-reg (string_ list_ )
+	(let (part replacement comp cpt)
+		(setf cpt 0)
+		(setf comp string_)
+		(loop for arg in list_ do 
+			(setf part (format nil " ~a " arg))
+			(setf cpt (+ cpt 1))
+			(setf replacement (format nil " R~a " cpt))
+			(setf comp (replace-all comp part replacement ))
+		)
+		(return-from replace-params-reg comp)
+	)
+)
 (defun compile-fct (fct)
 	(let (comp)
 		(setf comp (concatenate 'string comp (format nil "(LABEL ~a) ~%" fct)))
-		(loop for ()
-
-		)
-		(setf comp (concatenate 'string comp (compile (get fct 'code))))
+		(setf comp (concatenate 'string comp (replace-params-reg (compile (get fct 'code)) (get fct 'params) ) ))
 		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" fct)))
 	)
 )
