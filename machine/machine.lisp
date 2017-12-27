@@ -217,7 +217,32 @@
 )
 ;;Compilation appel de fct 
 (defun compile-fctcall (vm call)
-	;;for taille code 
+	(let (comp nbParam)
+		(setf nbParam 0)
+		(loop for arg in (cdr call) do 
+			(setf comp (concatenate 'string comp (compile-expr vm arg)))
+			(setf comp (concatenate 'string comp (format nil "(PUSH R0) ~%")))
+			(setf nbParam (+ nbParam 1))
+		)
+		(setf comp (concatenate 'string comp (format nil "(PUSH ~a) ~%" nbParam)))
+		(setf comp (concatenate 'string comp (format nil "(MOVE FP R1) ~%" )))
+		(setf comp (concatenate 'string comp (format nil "(MOVE SP FP) ~%" )))
+		(setf comp (concatenate 'string comp (format nil "(MOVE SP R2) ~%" )))
+		(setf comp (concatenate 'string comp (format nil "(SUB ~a R2) ~%" nbParam)))
+		(setf comp (concatenate 'string comp (format nil "(DECR R2) ~%" )))
+		(setf comp (concatenate 'string comp (format nil "(PUSH R2) ~%" )))
+		(setf comp (concatenate 'string comp (format nil "(PUSH R1) ~%" )))
+
+		(setf comp (concatenate 'string comp (format nil "(JSR ~a) ~%" (car call))))
+
+		(setf comp (concatenate 'string comp (format nil "(POP R1) ~%" )))
+		(setf comp (concatenate 'string comp (format nil "(POP R2) ~%" )))
+
+		(setf comp (concatenate 'string comp (format nil "(MOVE R1 FP) ~%" )))
+		(setf comp (concatenate 'string comp (format nil "(POP R2 SP) ~%" )))
+		(return-from compile-fctcall comp)
+	)
+
 )
 ;;Disponible dans la documentation sur les strings
 ;; Ne fait pas parti des ANSI Standard
@@ -255,3 +280,5 @@ is replaced with replacement."
 		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" fct)))
 	)
 )
+
+(defun compile_(fct))
