@@ -239,7 +239,7 @@
 		(setf comp (concatenate 'string comp (format nil "(POP R2) ~%" )))
 
 		(setf comp (concatenate 'string comp (format nil "(MOVE R1 FP) ~%" )))
-		(setf comp (concatenate 'string comp (format nil "(POP R2 SP) ~%" )))
+		(setf comp (concatenate 'string comp (format nil "(MOVE R2 SP) ~%" )))
 		(return-from compile-fctcall comp)
 	)
 
