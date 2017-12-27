@@ -103,9 +103,9 @@
 		(cond	
 			( (atom expr) (setf comp (format nil "(MOVE ~a R0)~%" expr)) )
 			( t	
-				(setf comp (concatenate 'string comp (compile-expr vm (second expr) )))
+				(setf comp (concatenate 'string comp (compile-line vm (second expr) )))
 				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
-				(setf comp (concatenate 'string comp (compile-expr vm (third expr) )))
+				(setf comp (concatenate 'string comp (compile-line vm (third expr) )))
 				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R2)~%")))
 				(cond
 					( (equal (first expr) '+) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'ADD)))	)
@@ -148,10 +148,9 @@
 )
 (defun compile-comp(vm expr)
 	(let (comp)
-		(write expr)
-		(setf comp (concatenate 'string comp (compile-expr vm (second  expr)) ))
+		(setf comp (concatenate 'string comp (compile-line vm (second  expr)) ))
 		(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
-		(setf comp (concatenate 'string comp (compile-expr vm (third  expr)) ))
+		(setf comp (concatenate 'string comp (compile-line vm (third  expr)) ))
 		(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
 		(setf comp (concatenate 'string comp (format nil "(POP R2)~%")))
 		(setf comp (concatenate 'string comp (format nil "(CMP R1 R2)~%")))
@@ -201,9 +200,9 @@
 
 		(setf comp (concatenate 'string comp (format nil "(CMP 1 R0) ~%")))
 
-		(setq true (compile-expr vm (third expr)))
+		(setq true (compile-line vm (third expr)))
 		(setf length_t (count #\newline true))
-		(setq false (compile-expr vm (fourth expr)))
+		(setq false (compile-line vm (fourth expr)))
 		(setf length_f (count #\newline false))
 		;;jump taille false plus 1 pour sauter le 'jump pc +taille true'
 		
@@ -220,7 +219,7 @@
 	(let (comp nbParam)
 		(setf nbParam 0)
 		(loop for arg in (cdr call) do 
-			(setf comp (concatenate 'string comp (compile-expr vm arg)))
+			(setf comp (concatenate 'string comp (compile-line vm arg)))
 			(setf comp (concatenate 'string comp (format nil "(PUSH R0) ~%")))
 			(setf nbParam (+ nbParam 1))
 		)
@@ -273,12 +272,56 @@ is replaced with replacement."
 		(return-from replace-params-reg comp)
 	)
 )
-(defun compile-fct (fct)
+(defun compile-fct (vm fct)
 	(let (comp)
 		(setf comp (concatenate 'string comp (format nil "(LABEL ~a) ~%" fct)))
-		(setf comp (concatenate 'string comp (replace-params-reg (compile (get fct 'code)) (get fct 'params) ) ))
+		(setf comp (concatenate 'string comp (replace-params-reg (compile-all (get fct 'code)) (get fct 'params) ) ))
 		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" fct)))
+		(return-from compile-fct comp)
+	)
+)
+(defun isOp (op)
+	(let (res)
+		(setf res nil)
+		(cond 
+			((equal op '+) (setf  res T))
+			((equal op '-) (setf  res T))
+			((equal op '*) (setf  res T))
+			((equal op '/) (setf  res T))
+			((numberp op) (setf res T))
+		)
+		(return-from isOP res)
 	)
 )
 
-(defun compile_(fct))
+(defun isComp(op)
+	(let (res)
+		(setf res nil)
+		(cond 
+			((equal op '<) (setf  res T))
+			((equal op '>) (setf  res T))
+			((equal op '=) (setf  res T))
+			((equal op '<=) (setf  res T))
+			((equal op '>=) (setf  res T))
+		)
+		(return-from isComp res)
+	)
+)
+;;Compile une ligne
+(defun compile-line(vm line)
+ 	(let (comp)
+ 		(cond 
+ 			((numberp line) (setf comp (compile-expr vm line))) ;;Si la ligne est juste un chiffre
+ 			((atom line) (setf comp (compile-expr vm line))) ;; Si c'est un atom genre A
+ 			((isOp (car line)) (setf comp(compile-expr vm line))) ;;Si c'est une expr arithmetique
+ 			((isComp (car line)) (setf comp (compile-comp vm line)));;Si c'est un operateur de comparaison
+ 			((equal (car line) 'if) (setf comp(compile-if vm line))) ;;Si c'est un if
+ 			((equal (car line) 'defun) (setf comp (compile-fct vm line))) ;;Si c'est une définition de fonction
+ 			((atom (car line)) (setf comp (compile-fctcall vm line))) ;;Si c'est un atom, peut-être mieux de chercher si l'atom est bien une fonction
+ 		)
+ 		(return-from compile-line comp)
+ 	)
+)
+
+;;compile-prog compile un programme ligne par ligne
+
