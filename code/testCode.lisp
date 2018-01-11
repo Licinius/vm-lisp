@@ -37,11 +37,23 @@
 ; 		(MULT R1 R0)
 ; 		(JMP BOUCLE)
 
+(setf testFunction
+	'(mdefun fact n
+		(
+			(if (< n 2)
+				1
+				(* n (fact (- n 1)) )
+			)
+		)
+	)
+)
+
+
 ; 	(LABEL END)
 ; 		(RTN)
 ; 	)
 ; ; )
-(setf if_ '(if(<= 0 1) 0 1 ) )
+(setf if_ '(if(<= 0 1) (+ a 1) 1 ) )
  ; (setf (get 'vm 'R1) 4)
 
 ; (get 'vm 'labels)

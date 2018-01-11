@@ -34,7 +34,7 @@
 		((not (equal (car instr) NIL))
 			(cond
 				(
-					(equal(caar instr) "LABEL")
+					(equal(caar instr) 'LABEL)
 						(setf (gethash (cadar instr) (get vm 'labels)) ptr)
 						(loader vm (cdr instr) ptr)
 				)
@@ -141,10 +141,11 @@
 	)
 )
 
-(defun mdefun (nom params code)
-	(set-Symb nom 'params params)
-	(set-Symb nom 'nbP (list-length params))
-	(set-Symb nom 'code code)
+(defun mdefun (vm nom params code)
+	(set-Symb vm nom '())
+	(set-Symb (get vm nom) 'params params)
+	(set-Symb (get vm nom) 'nbP (list-length params))
+	(set-Symb (get vm nom) 'code code)
 )
 (defun compile-comp(vm expr)
 	(let (comp)
@@ -261,7 +262,7 @@ is replaced with replacement."
             while pos)))
 (defun replace-params-reg (string_ list_ )
 	(let (part replacement comp cpt)
-		(setf cpt 0)
+		(setf cpt 4)
 		(setf comp string_)
 		(loop for arg in list_ do 
 			(setf part (format nil " ~a " arg))
@@ -275,7 +276,7 @@ is replaced with replacement."
 (defun compile-fct (vm fct)
 	(let (comp)
 		(setf comp (concatenate 'string comp (format nil "(LABEL ~a) ~%" fct)))
-		(setf comp (concatenate 'string comp (replace-params-reg (compile-all (get fct 'code)) (get fct 'params) ) ))
+		(setf comp (concatenate 'string comp (replace-params-reg (compile-all vm (get (get vm fct) 'code)) (get (get vm fct) 'params) ) ))
 		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" fct)))
 		(return-from compile-fct comp)
 	)
@@ -313,15 +314,22 @@ is replaced with replacement."
  		(cond 
  			((numberp line) (setf comp (compile-expr vm line))) ;;Si la ligne est juste un chiffre
  			((atom line) (setf comp (compile-expr vm line))) ;; Si c'est un atom genre A
- 			((isOp (car line)) (setf comp(compile-expr vm line))) ;;Si c'est une expr arithmetique
- 			((isComp (car line)) (setf comp (compile-comp vm line)));;Si c'est un operateur de comparaison
  			((equal (car line) 'if) (setf comp(compile-if vm line))) ;;Si c'est un if
  			((equal (car line) 'defun) (setf comp (compile-fct vm line))) ;;Si c'est une définition de fonction
+ 			((isOp (car line)) (setf comp(compile-expr vm line))) ;;Si c'est une expr arithmetique
+ 			((isComp (car line)) (setf comp (compile-comp vm line)));;Si c'est un operateur de comparaison
  			((atom (car line)) (setf comp (compile-fctcall vm line))) ;;Si c'est un atom, peut-être mieux de chercher si l'atom est bien une fonction
  		)
  		(return-from compile-line comp)
  	)
 )
 
-;;compile-prog compile un programme ligne par ligne
-
+#| a faire : compile-all compile toutes les fonctions avant tout (donc rajouter symbole liste dans vm pour toutes les fonctions) |#
+(defun compile-all (vm progr)
+	(let (comp)
+		(loop for line in progr do
+			(setf comp (concatenate 'string comp (compile-line vm line)))
+		)
+		(return-from compile-all comp)
+	)
+)
