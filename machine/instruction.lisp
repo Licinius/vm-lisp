@@ -11,9 +11,6 @@
 	(setf (get vm P) (aref (get vm 'mem) adr))
 )
 
-(defun vm-get (vm OFFSET P)
-	(vm-load vm (- (get vm 'FP) OFFSET) P)
-)
 ; STORE P adr
 (defun vm-store (vm P adr)
 	(if (symbolp P)
@@ -169,6 +166,8 @@
 	(setf (get vm P1) (cons (get vm P1) (get vm P2)))
 )
 
+
+
 ; WRITE P
 (defun vm-write (vm P)
 	(if (symbolp P)
@@ -177,4 +176,7 @@
 	)
 )
 
-
+; GET OFFSET P1 P2
+(defun vm-get (vm OFFSET P1 P2)
+	(vm-load vm (+ (get vm P1) OFFSET) P2)
+)
