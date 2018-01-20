@@ -38,7 +38,7 @@
 ; 		(JMP BOUCLE)
 
 (setf testFunction
-	'(mdefun fact n
+	'((defun fact (n)
 		(
 			(if (< n 2)
 				1
@@ -46,13 +46,24 @@
 			)
 		)
 	)
+	(fact 4)
+	)
 )
 
-
+(setf testFunction
+	'((defun fact (n)
+		(
+			(+ n 1)
+		)
+	)
+	(fact 4)
+	)
+)
 ; 	(LABEL END)
 ; 		(RTN)
 ; 	)
 ; ; )
+(cl-user::quit)
 (setf if_ '(if(<= 0 1) (+ a 1) 1 ) )
  ; (setf (get 'vm 'R1) 4)
 
@@ -75,3 +86,5 @@
 ; (readFile chemin code)
 (loader 'vm code)
 (exec-vm 'vm)
+
+(compile-load 'vm testFunction)
