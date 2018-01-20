@@ -24,7 +24,8 @@
 	(set-Symb nom 'R0 0)
 	(set-Symb nom 'R1 0)
 	(set-Symb nom 'R2 0)
-
+	(set-Symb nom 'R3 0)
+	(set-Symb nom 'R4 0)
 	;; VM State (0 on, 1 off)
 	(set-Symb nom 'state 0)
 )
@@ -45,9 +46,6 @@
 			)
 		)
 	)
-)
-(defun etiq()
-
 )
 (defun set-flag-DEQ (vm)
 	(set-flag-init vm)
@@ -186,6 +184,17 @@
 	)
 
 )
+(defun count-substrings (substring string)
+  (loop
+    with sub-length = (length substring)
+    for i from 0 to (- (length string) sub-length)
+    when (string= string substring
+                  :start1 i :end1 (+ i sub-length))
+    count it))
+
+(defun count-instruction (code)
+	(- (count #\newline code) (count-substrings "LABEL" code ))
+)
 ; ordre execution :
 ; 	print CMP
 ; 	stocker false
@@ -204,9 +213,10 @@
 		(setf comp (concatenate 'string comp (format nil "(CMP 1 R0) ~%")))
 
 		(setq true (compile-line  (third expr) env))
-		(setf length_t (count #\newline true))
+		(setf length_t (count-instruction true))
+		(write length_t)
 		(setq false (compile-line  (fourth expr) env))
-		(setf length_f (count #\newline false))
+		(setf length_f (count-instruction false))
 		;;jump taille false plus 1 pour sauter le 'jump pc +taille true'
 		
 		(setf comp (concatenate 'string comp (format nil "(JEQ ~a) ~%" (+ length_f 1))))
@@ -230,11 +240,10 @@
 		(setf comp (concatenate 'string comp (format nil "(MOVE FP R1) ~%" )))
 		(setf comp (concatenate 'string comp (format nil "(MOVE SP FP) ~%" )))
 		(setf comp (concatenate 'string comp (format nil "(MOVE SP R2) ~%" )))
-		(setf comp (concatenate 'string comp (format nil "(SUB ~a R2) ~%" nbParam)))
-		(setf comp (concatenate 'string comp (format nil "(DECR R2) ~%" )))
+		(setf comp (concatenate 'string comp (format nil "(SUB ~a R2) ~%" (+ nbParam 1)))) #| sub nbParam + push du nombre de pararms |#
 		(setf comp (concatenate 'string comp (format nil "(PUSH R2) ~%" )))
 		(setf comp (concatenate 'string comp (format nil "(PUSH R1) ~%" )))
-
+		(setf comp (concatenate 'string comp (format nil "(PUSH RA) ~%" )))
 		(setf comp (concatenate 'string comp (format nil "(JSR ~a) ~%" (car call))))
 
 		(setf comp (concatenate 'string comp (format nil "(POP R1) ~%" )))
@@ -289,17 +298,22 @@ is replaced with replacement."
 
 (defun compile-fct (fct env)
 	(let (comp)
+		(setf comp (concatenate 'string comp (format nil "(JMP end_~a) ~%" (second fct))))
 		(setf comp (concatenate 'string comp (format nil "(LABEL ~a) ~%" (second fct))))
+		(setf comp (concatenate 'string comp (format nil "(POP R3) ~%" )))
 		;;Ajout des paramètres à l'environnement
 		 (let (index)
 		 	(setf index (lastValueEnv env));
 			(loop for arg in (third fct) do
+				(setf comp (concatenate 'string comp (format nil "(POP R~a) ~%" index)))
 				(setf env (consPair env arg index))
 				(setf index (+ index 1))
 			)
 		)
+		
 		(setf comp (concatenate 'string comp (replace-params-reg (compile-all (fourth fct) env ) env)))
 		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" )))
+		(setf comp (concatenate 'string comp (format nil "(LABEL end_~a) ~%" (second fct))))
 		(return-from compile-fct comp)
 	)
 )
@@ -334,8 +348,7 @@ is replaced with replacement."
 (defun compile-line(line env)
  	(let (comp)
  		(cond 
- 			((numberp line) (setf comp (compile-expr line env))) ;;Si la ligne est juste un chiffre
- 			((atom line) (setf comp (compile-expr line env))) ;; Si c'est un atom genre A
+ 			((atom line) (setf comp (compile-expr line env))) ;; Si c'est un atom genre A ou un nombre
  			((equal (car line) 'if) (setf comp(compile-if line env))) ;;Si c'est un if
  			((equal (car line) 'defun) (setf comp (compile-fct line env))) ;;Si c'est une définition de fonction
  			((isOp (car line)) (setf comp(compile-expr line env))) ;;Si c'est une expr arithmetique
@@ -359,6 +372,7 @@ is replaced with replacement."
 (defun compile-load (vm progr)
 	(writeFile "..\\code\\ASM.lisp" (compile-all progr '()))
 	(loader vm (readFile "..\\code\\ASM.lisp"))
+	(get 'vm 'mem)
 )
 
 (defun compile-load-exec (vm progr)

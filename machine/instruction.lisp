@@ -11,6 +11,9 @@
 	(setf (get vm P) (aref (get vm 'mem) adr))
 )
 
+(defun vm-get (vm OFFSET P)
+	(vm-load vm (- (get vm 'FP) OFFSET) P)
+)
 ; STORE P adr
 (defun vm-store (vm P adr)
 	(if (symbolp P)
@@ -31,23 +34,23 @@
 
 ; ADD P1 P2
 (defun vm-add (vm P1 P2)
-	(setf (get vm P2) (+ (get vm P2) (get vm P1)))
+	(setf (get vm P2) (+ (get vm P1) (get vm P2)))
 )
 
 ; SUB P1 P2
 (defun vm-sub (vm P1 P2)
-	(setf (get vm P2) (- (get vm P2) (get vm P1)))
+	(setf (get vm P2) (- (get vm P1) (get vm P2)))
 )
 
 ; MULT P1 P2
 (defun vm-mult (vm P1 P2)
-	(setf (get vm P2) (* (get vm P2) (get vm P1)))
+	(setf (get vm P2) (* (get vm P1) (get vm P2)))
 )
 
 ; DIV P1 P2
 (defun vm-div (vm P1 P2)
 	(if (not (equal (get vm P1) 0))
-		(setf (get vm P2) (/ (get vm P2) (get vm P1)))
+		(setf (get vm P2) (/ (get vm P1) (get vm P2)))
 	)
 )
 
@@ -173,4 +176,5 @@
 		(write P)
 	)
 )
+
 
