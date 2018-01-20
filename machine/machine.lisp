@@ -135,9 +135,10 @@
 			( (atom expr) (setf comp (format nil "(MOVE ~a R0)~%" expr)) )
 			( t	
 				(setf comp (concatenate 'string comp (compile-line (second expr) env)))
-				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
+				(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
 				(setf comp (concatenate 'string comp (compile-line (third expr) env)))
 				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R2)~%")))
+				(setf comp (concatenate 'string comp (format nil "(POP R1)~%")))
 				(cond
 					( (equal (first expr) '+) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'ADD)))	)
 					( (equal (first expr) '-) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'SUB)))	)
@@ -157,30 +158,31 @@
 		(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
 		(setf comp (concatenate 'string comp (compile-line  (third  expr) env) ))
 		(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
-		(setf comp (concatenate 'string comp (format nil "(POP R2)~%")))
-		(setf comp (concatenate 'string comp (format nil "(CMP R1 R2)~%")))
+		(setf comp (concatenate 'string comp (format nil "(POP R0)~%")))
+		(setf comp (concatenate 'string comp (format nil "(CMP R1 R0)~%")))
 
+		;;JMP TO CMPTRUE
 		(cond
 			( (equal (first expr) '<)
-				(setf comp (concatenate 'string comp (format nil "(JPP CMPTRUE) ~%")))
+				(setf comp (concatenate 'string comp (format nil "(JPP 2) ~%"))) 
 			)
 			( (equal (first expr) '>) ()
-				(setf comp (concatenate 'string comp (format nil "(JPG CMPTRUE) ~%")))
+				(setf comp (concatenate 'string comp (format nil "(JPG 2) ~%")))
 			)
 			( (equal (first expr) '=) ()
-				(setf comp (concatenate 'string comp (format nil "(JEQ CMPTRUE) ~%")))
+				(setf comp (concatenate 'string comp (format nil "(JEQ 2) ~%")))
 			) 
 			( (equal (first expr) '<=) ()
-				(setf comp (concatenate 'string comp (format nil "(JPE CMPTRUE) ~%")))
+				(setf comp (concatenate 'string comp (format nil "(JPE 2) ~%")))
 			) 
 			( (equal (first expr) '>=) ()
-				(setf comp (concatenate 'string comp (format nil "(JGE CMPTRUE) ~%")))
+				(setf comp (concatenate 'string comp (format nil "(JGE 2) ~%")))
 			)
 		)
 
 		(setf comp (concatenate 'string comp (format nil "(MOVE 0 R0) ~%")))
-		(setf comp (concatenate 'string comp (format nil "(JMP IFSUITE) ~%")))
-		(setf comp (concatenate 'string comp (format nil "(LABEL CMPTRUE) ~%")))
+		(setf comp (concatenate 'string comp (format nil "(JMP 1) ~%"))) ;;JUMP TO IF SUITE 
+		;;CMPTRUE
 		(setf comp (concatenate 'string comp (format nil "(MOVE 1 R0) ~%")))
 
 
@@ -212,9 +214,9 @@
 	(let (comp true false length_t length_f) 
 		; in first arg of if (bool)
 		(setf comp (concatenate 'string comp (compile-comp  (second expr) env)) )
-		(setf comp (concatenate 'string comp (format nil "(LABEL IFSUITE) ~%")))
+		;;CMP IFSUITE
 
-		(setf comp (concatenate 'string comp (format nil "(CMP 1 R0) ~%")))
+		(setf comp (concatenate 'string comp (format nil "(CMP 0 R0) ~%")))
 
 		(setq true (compile-line  (third expr) env))
 		(setf length_t (count-instruction true))
@@ -223,10 +225,10 @@
 		(setf length_f (count-instruction false))
 		;;jump taille false plus 1 pour sauter le 'jump pc +taille true'
 		
-		(setf comp (concatenate 'string comp (format nil "(JEQ ~a) ~%" (+ length_f 1))))
-		(setf comp (concatenate 'string comp (format nil "~a" false)));;print false
-		(setf comp (concatenate 'string comp (format nil "(JMP ~a) ~%" length_t)))
+		(setf comp (concatenate 'string comp (format nil "(JEQ ~a) ~%" (+ length_t 1))))
 		(setf comp (concatenate 'string comp (format nil "~a" true)));;print true
+		(setf comp (concatenate 'string comp (format nil "(JMP ~a) ~%" length_f )))
+		(setf comp (concatenate 'string comp (format nil "~a" false)));;print false
 		(return-from compile-if comp)
 	)
 	
@@ -235,7 +237,7 @@
 (defun compile-fctcall (call env)
 	(let (comp nbParam)
 		(setf nbParam 0)
-		(loop for arg in (cdr call) do 
+		(loop for arg in (reverse (cdr call)) do 
 			(setf comp (concatenate 'string comp (compile-line  arg env)))
 			(setf comp (concatenate 'string comp (format nil "(PUSH R0) ~%")))
 			(setf nbParam (+ nbParam 1))
@@ -381,7 +383,6 @@ is replaced with replacement."
 (defun compile-load (vm progr)
 	(writeFile "..\\code\\ASM.lisp" (compile-all progr '()))
 	(loader vm (readFile "..\\code\\ASM.lisp"))
-	(get 'vm 'mem)
 )
 
 (defun compile-load-exec (vm progr)

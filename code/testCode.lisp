@@ -20,10 +20,10 @@
 			)
 		)
 	)
-	(fact 4)
+	(fact 7)
 	)
 )
-
+(cl-user::quit)
 
 
 (require "machine.lisp")
@@ -48,5 +48,7 @@
 	)
 )
 (compile-load 'vm testFunction1)
-
 (exec-vm 'vm)
+;;ou 
+
+(compile-load-exec 'vm testFunction)
