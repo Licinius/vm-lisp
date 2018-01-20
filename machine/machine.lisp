@@ -46,7 +46,9 @@
 		)
 	)
 )
+(defun etiq()
 
+)
 (defun set-flag-DEQ (vm)
 	(set-flag-init vm)
 	(set-Symb vm 'DEQ 1)
@@ -97,29 +99,6 @@
 	)
 	"Fin de VM"
 )
-
-(defun compile-expr (vm expr)
-	(let (comp)
-		(cond	
-			( (atom expr) (setf comp (format nil "(MOVE ~a R0)~%" expr)) )
-			( t	
-				(setf comp (concatenate 'string comp (compile-line vm (second expr) )))
-				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
-				(setf comp (concatenate 'string comp (compile-line vm (third expr) )))
-				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R2)~%")))
-				(cond
-					( (equal (first expr) '+) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'ADD)))	)
-					( (equal (first expr) '-) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'SUB)))	)
-					( (equal (first expr) '*) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'MULT)))	)
-					( (equal (first expr) '/) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'DIV)))	)
-				)
-				(setf comp (concatenate 'string comp (format nil "(MOVE R2 R0)~%")))
-			)
-		)
-		(return-from compile-expr comp)
-	)
-)
-
 (defun readFile (path)
 	(let ( (fin (open path :if-does-not-exist :error :direction :input)) )
 		(setf obj '())
@@ -147,11 +126,34 @@
 	(set-Symb (get vm nom) 'nbP (list-length params))
 	(set-Symb (get vm nom) 'code code)
 )
-(defun compile-comp(vm expr)
+
+(defun compile-expr (expr env)
 	(let (comp)
-		(setf comp (concatenate 'string comp (compile-line vm (second  expr)) ))
+		(cond	
+			( (atom expr) (setf comp (format nil "(MOVE ~a R0)~%" expr)) )
+			( t	
+				(setf comp (concatenate 'string comp (compile-line (second expr) env)))
+				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
+				(setf comp (concatenate 'string comp (compile-line (third expr) env)))
+				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R2)~%")))
+				(cond
+					( (equal (first expr) '+) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'ADD)))	)
+					( (equal (first expr) '-) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'SUB)))	)
+					( (equal (first expr) '*) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'MULT)))	)
+					( (equal (first expr) '/) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'DIV)))	)
+				)
+				(setf comp (concatenate 'string comp (format nil "(MOVE R2 R0)~%")))
+			)
+		)
+		(return-from compile-expr comp)
+	)
+)
+
+(defun compile-comp(expr env)
+	(let (comp)
+		(setf comp (concatenate 'string comp (compile-line  (second  expr) env) ))
 		(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
-		(setf comp (concatenate 'string comp (compile-line vm (third  expr)) ))
+		(setf comp (concatenate 'string comp (compile-line  (third  expr) env) ))
 		(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
 		(setf comp (concatenate 'string comp (format nil "(POP R2)~%")))
 		(setf comp (concatenate 'string comp (format nil "(CMP R1 R2)~%")))
@@ -192,18 +194,18 @@
 ; 	stocke true
 ; 	jump pc + taille true
 ; 	print true
-(defun compile-if (vm expr)
+(defun compile-if (expr env)
 
 	(let (comp true false length_t length_f) 
 		; in first arg of if (bool)
-		(setf comp (concatenate 'string comp (compile-comp vm (second expr))) )
+		(setf comp (concatenate 'string comp (compile-comp  (second expr) env)) )
 		(setf comp (concatenate 'string comp (format nil "(LABEL IFSUITE) ~%")))
 
 		(setf comp (concatenate 'string comp (format nil "(CMP 1 R0) ~%")))
 
-		(setq true (compile-line vm (third expr)))
+		(setq true (compile-line  (third expr) env))
 		(setf length_t (count #\newline true))
-		(setq false (compile-line vm (fourth expr)))
+		(setq false (compile-line  (fourth expr) env))
 		(setf length_f (count #\newline false))
 		;;jump taille false plus 1 pour sauter le 'jump pc +taille true'
 		
@@ -216,11 +218,11 @@
 	
 )
 ;;Compilation appel de fct 
-(defun compile-fctcall (vm call)
+(defun compile-fctcall (call env)
 	(let (comp nbParam)
 		(setf nbParam 0)
 		(loop for arg in (cdr call) do 
-			(setf comp (concatenate 'string comp (compile-line vm arg)))
+			(setf comp (concatenate 'string comp (compile-line  arg env)))
 			(setf comp (concatenate 'string comp (format nil "(PUSH R0) ~%")))
 			(setf nbParam (+ nbParam 1))
 		)
@@ -260,24 +262,44 @@ is replaced with replacement."
                              :end (or pos (length string)))
             when pos do (write-string replacement out)
             while pos)))
-(defun replace-params-reg (string_ list_ )
-	(let (part replacement comp cpt)
-		(setf cpt 4)
+(defun replace-params-reg (string_ env )
+	(let (part replacement comp)
 		(setf comp string_)
-		(loop for arg in list_ do 
-			(setf part (format nil " ~a " arg))
-			(setf cpt (+ cpt 1))
-			(setf replacement (format nil " R~a " cpt))
+		(loop for arg in env do 
+			(setf part (format nil " ~a " (car arg)))
+			(setf replacement (format nil " R~a " (cdr arg)))
 			(setf comp (replace-all comp part replacement ))
 		)
 		(return-from replace-params-reg comp)
 	)
 )
-(defun compile-fct (vm fct)
+(defun lastValueEnv(env)
+	(if (null env)
+		4
+		(cdr (first (last env)))
+	)
+)
+
+(defun consPair (env arg index)
+	(if (null env)
+		(setf env (list (cons arg index)))
+		(setf env (cons (car env) (consPair (cdr env) arg index) )) 
+	)
+)
+
+(defun compile-fct (fct env)
 	(let (comp)
-		(setf comp (concatenate 'string comp (format nil "(LABEL ~a) ~%" fct)))
-		(setf comp (concatenate 'string comp (replace-params-reg (compile-all vm (get (get vm fct) 'code)) (get (get vm fct) 'params) ) ))
-		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" fct)))
+		(setf comp (concatenate 'string comp (format nil "(LABEL ~a) ~%" (second fct))))
+		;;Ajout des paramètres à l'environnement
+		 (let (index)
+		 	(setf index (lastValueEnv env));
+			(loop for arg in (third fct) do
+				(setf env (consPair env arg index))
+				(setf index (+ index 1))
+			)
+		)
+		(setf comp (concatenate 'string comp (replace-params-reg (compile-all (fourth fct) env ) env)))
+		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" )))
 		(return-from compile-fct comp)
 	)
 )
@@ -309,27 +331,37 @@ is replaced with replacement."
 	)
 )
 ;;Compile une ligne
-(defun compile-line(vm line)
+(defun compile-line(line env)
  	(let (comp)
  		(cond 
- 			((numberp line) (setf comp (compile-expr vm line))) ;;Si la ligne est juste un chiffre
- 			((atom line) (setf comp (compile-expr vm line))) ;; Si c'est un atom genre A
- 			((equal (car line) 'if) (setf comp(compile-if vm line))) ;;Si c'est un if
- 			((equal (car line) 'defun) (setf comp (compile-fct vm line))) ;;Si c'est une définition de fonction
- 			((isOp (car line)) (setf comp(compile-expr vm line))) ;;Si c'est une expr arithmetique
- 			((isComp (car line)) (setf comp (compile-comp vm line)));;Si c'est un operateur de comparaison
- 			((atom (car line)) (setf comp (compile-fctcall vm line))) ;;Si c'est un atom, peut-être mieux de chercher si l'atom est bien une fonction
+ 			((numberp line) (setf comp (compile-expr line env))) ;;Si la ligne est juste un chiffre
+ 			((atom line) (setf comp (compile-expr line env))) ;; Si c'est un atom genre A
+ 			((equal (car line) 'if) (setf comp(compile-if line env))) ;;Si c'est un if
+ 			((equal (car line) 'defun) (setf comp (compile-fct line env))) ;;Si c'est une définition de fonction
+ 			((isOp (car line)) (setf comp(compile-expr line env))) ;;Si c'est une expr arithmetique
+ 			((isComp (car line)) (setf comp (compile-comp line env)));;Si c'est un operateur de comparaison
+ 			((atom (car line)) (setf comp (compile-fctcall line env))) ;;Si c'est un atom, peut-être mieux de chercher si l'atom est bien une fonction
  		)
  		(return-from compile-line comp)
  	)
 )
 
 #| a faire : compile-all compile toutes les fonctions avant tout (donc rajouter symbole liste dans vm pour toutes les fonctions) |#
-(defun compile-all (vm progr)
+(defun compile-all (progr env)
 	(let (comp)
 		(loop for line in progr do
-			(setf comp (concatenate 'string comp (compile-line vm line)))
+			(setf comp (concatenate 'string comp (compile-line line env)))
 		)
 		(return-from compile-all comp)
 	)
+)
+
+(defun compile-load (vm progr)
+	(writeFile "..\\code\\ASM.lisp" (compile-all progr '()))
+	(loader vm (readFile "..\\code\\ASM.lisp"))
+)
+
+(defun compile-load-exec (vm progr)
+	(compile-load vm progr)
+	(exec-vm vm)
 )
