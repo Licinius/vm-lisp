@@ -1,15 +1,4 @@
-(setf test1
-	'( 
-		(PUSH 5)
-		(PUSH 4)
-		(PUSH 3)
-		(PUSH 2)
-		(PUSH 1)
-		(PUSH 0)
-		(SET 10 3 SP)
-	)
-)
-
+(cl-user::quit)
 (setf testFunction
 	'((defun fact (n)
 		(
@@ -19,15 +8,29 @@
 			)
 		)
 	)
-	(fact 7)
+	(fact 6)
 	)
 )
-(cl-user::quit)
+(setf fiboFunction '((defun fibo(n) ((if(< n 2) n (+ (fibo(- n 1)) (fibo (- n 2))) )) ) (fibo 6) ) )
 
+
+(setf testLoop 
+	'( (defun loop (n)
+			((while (< n 6)
+				(setf n (+ n 1))
+				)
+				n
+			)
+
+		)
+	 (loop 1)
+	)
+
+)
 
 (require "machine.lisp")
 (make-vm 'vm 1000)
-
+(compile-load-exec 'vm fiboFunction)
 ; (get 'vm 'labels)
 ; (get 'vm 'mem)
 
