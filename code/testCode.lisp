@@ -1,15 +1,14 @@
-; (setf test1
-; 	'( 
-; 		(PUSH 5)
-; 		(PUSH 4)
-; 		(PUSH 3)
-; 		(PUSH 2)
-; 		(PUSH 1)
-; 		(PUSH 0)
-; 		(GET 3 SP R0)
-; 		(WRITE R0)
-; 	)
-; )
+(setf test1
+	'( 
+		(PUSH 5)
+		(PUSH 4)
+		(PUSH 3)
+		(PUSH 2)
+		(PUSH 1)
+		(PUSH 0)
+		(SET 10 3 SP)
+	)
+)
 
 (setf testFunction
 	'((defun fact (n)

@@ -181,6 +181,7 @@
 	(vm-load vm (+ (get vm P1) OFFSET) P2)
 )
 
-(defun vm-set (vm OFFSET P1 P2)
-	(vm-store vm P2 (+ (get vm P1) OFFSET))
+; SET P1 OFFSET P2
+(defun vm-set (vm P1 OFFSET P2)
+	(vm-store vm P1 (+ (get vm P2) OFFSET))
 )

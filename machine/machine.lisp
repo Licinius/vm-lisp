@@ -97,7 +97,7 @@
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'CONS)	(vm-cons	vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC)))												))
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'WRITE)	(vm-write	vm	(nth 1 (aref (get vm 'mem) (get vm 'PC)))																						))
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'GET)	(vm-get		vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC))) (nth 3 (aref (get vm 'mem) (get vm 'PC)))	))
-			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'SET)	(vm-get		vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC))) (nth 3 (aref (get vm 'mem) (get vm 'PC)))	))
+			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'SET)	(vm-set		vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC))) (nth 3 (aref (get vm 'mem) (get vm 'PC)))	))
 
 		)
 		(incf (get vm 'PC))
@@ -342,23 +342,27 @@ is replaced with replacement."
 		(setf comp (concatenate 'string comp (format nil "(JMP end_~a) ~%" (second fct))))
 		(setf comp (concatenate 'string comp (format nil "(LABEL ~a) ~%" (second fct))))
 		;;Ajout des paramètres à l'environnement
-		 (let (index)
+		 (let (index cpt)
 		 	(setf index (lastValueEnv env))
+		 	(setf cpt 1)
 			(loop for arg in (third fct) do
-				(setf comp (concatenate 'string comp (format nil "(GET ~a FP R~a) ~%" (- index 3) index)))
+				(setf comp (concatenate 'string comp (format nil "(GET ~a FP R~a) ~%" cpt index)))
 				(setf env (consPair env arg index))
 				(setf index (+ index 1))
+				(setf cpt (+ cpt 1))
 			)
 		)
 		
 		(setf comp (concatenate 'string comp (replace-params-reg (compile-all (fourth fct) env ) env)))
 		;;Restaurer param ?
-		 (let (index)
+		 (let (index cpt)
 		 	(setf index (lastValueEnv env))
+		 	(setf cpt 1)
 			(loop for arg in (third fct) do
-				(setf comp (concatenate 'string comp (format nil "(SET ~a FP R~a) ~%" (- index 3) index)))
+				(setf comp (concatenate 'string comp (format nil "(SET R~a ~a FP) ~%" index cpt)))
 				(setf env (consPair env arg index))
 				(setf index (+ index 1))
+				(setf cpt (+ cpt 1))
 			)
 		)
 
