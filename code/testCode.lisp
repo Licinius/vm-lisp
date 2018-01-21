@@ -1,5 +1,5 @@
 (cl-user::quit)
-(setf testFunction
+(setf factFunction
 	'((defun fact (n)
 		(
 			(if (< n 2)
@@ -30,7 +30,7 @@
 
 (require "machine.lisp")
 (make-vm 'vm 1000)
-(compile-load-exec 'vm fiboFunction)
+(compile-load-exec 'vm factFunction)
 ; (get 'vm 'labels)
 ; (get 'vm 'mem)
 
