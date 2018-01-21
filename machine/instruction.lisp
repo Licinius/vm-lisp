@@ -120,18 +120,18 @@
 ; CMP atom P2
 (defun vm-cmp-atom (vm P1 P2)
 	(cond
-		((equal (get vm P2) P1) (set-flag-DEQ vm))
-		((< (get vm P2) P1) (set-flag-DPP vm))
-		((> (get vm P2) P1) (set-flag-DPG vm))
+		((equal P1 (get vm P2)) (set-flag-DEQ vm))
+		((< P1 (get vm P2)) (set-flag-DPP vm))
+		((> P1 (get vm P2)) (set-flag-DPG vm))
 	)
 ) 
 
 ; CMP P1 P2
 (defun vm-cmp-reg (vm P1 P2)
 	(cond
-		((equal (get vm P2) (get vm P1)) (set-flag-DEQ vm))
-		((< (get vm P2) (get vm P1)) (set-flag-DPP vm))
-		((> (get vm P2) (get vm P1)) (set-flag-DPG vm))
+		((equal (get vm P1) (get vm P2)) (set-flag-DEQ vm))
+		((< (get vm P1) (get vm P2)) (set-flag-DPP vm))
+		((> (get vm P1) (get vm P2)) (set-flag-DPG vm))
 	)
 )
 

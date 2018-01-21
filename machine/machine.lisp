@@ -159,7 +159,7 @@
 		(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
 		(setf comp (concatenate 'string comp (compile-line  (third  expr) env) ))
 		(setf comp (concatenate 'string comp (format nil "(POP R1)~%")))
-		(setf comp (concatenate 'string comp (format nil "(CMP R0 R1)~%")))
+		(setf comp (concatenate 'string comp (format nil "(CMP R1 R0)~%")))
 
 		;;JMP TO CMPTRUE
 		(cond
@@ -220,15 +220,15 @@
 
 		(setq true (compile-line  (third expr) env))
 		(setf length_t (count-instruction true))
-		(write length_t)
+
 		(setq false (compile-line  (fourth expr) env))
 		(setf length_f (count-instruction false))
 		;;jump taille false plus 1 pour sauter le 'jump pc +taille true'
 		
-		(setf comp (concatenate 'string comp (format nil "(JEQ ~a) ~%" (+ length_t 1))))
-		(setf comp (concatenate 'string comp (format nil "~a" true)));;print true
-		(setf comp (concatenate 'string comp (format nil "(JMP ~a) ~%" length_f )))
+		(setf comp (concatenate 'string comp (format nil "(JEQ ~a) ~%" (+ length_f 1))))
 		(setf comp (concatenate 'string comp (format nil "~a" false)));;print false
+		(setf comp (concatenate 'string comp (format nil "(JMP ~a) ~%" length_t )))
+		(setf comp (concatenate 'string comp (format nil "~a" true)));;print true
 		(return-from compile-if comp)
 	)
 	
@@ -242,9 +242,10 @@
 		(setf comp (concatenate 'string comp (format nil "~a" test)));;print test
 
 		(setf comp (concatenate 'string comp (format nil "(CMP 0 R0) ~%")))
+		
 		(setq true (compile-line  (third expr) env))
-		(write true)
 		(setf length_t (count-instruction true))
+		
 		(setf comp (concatenate 'string comp (format nil "(JEQ ~a) ~%" (+ length_t 1))))
 		(setf comp (concatenate 'string comp (format nil "~a" true)));;print true
 		(setf boucle (+ length_t 2 length_test))
@@ -354,17 +355,17 @@ is replaced with replacement."
 		)
 		
 		(setf comp (concatenate 'string comp (replace-params-reg (compile-all (fourth fct) env ) env)))
-		;;Restaurer param ?
-		 (let (index cpt)
-		 	(setf index (lastValueEnv env))
-		 	(setf cpt 1)
-			(loop for arg in (third fct) do
-				(setf comp (concatenate 'string comp (format nil "(SET R~a ~a FP) ~%" index cpt)))
-				(setf env (consPair env arg index))
-				(setf index (+ index 1))
-				(setf cpt (+ cpt 1))
-			)
-		)
+		; ;;Restaurer param ?
+		;  (let (index cpt)
+		;  	(setf index (lastValueEnv env))
+		;  	(setf cpt 1)
+		; 	(loop for arg in (third fct) do
+		; 		(setf comp (concatenate 'string comp (format nil "(SET R~a ~a FP) ~%" index cpt)))
+		; 		(setf env (consPair env arg index))
+		; 		(setf index (+ index 1))
+		; 		(setf cpt (+ cpt 1))
+		; 	)
+		; )
 
 		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" )))
 		(setf comp (concatenate 'string comp (format nil "(LABEL end_~a) ~%" (second fct))))
