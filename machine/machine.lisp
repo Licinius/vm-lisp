@@ -68,6 +68,7 @@
 (defun exec-vm (vm)
 	(loop while (not (or (equal (aref (get vm 'mem) (get vm 'PC)) NIL) (equal (get vm 'state) 1)))
 		do
+		#| 		(write (format nil " trace : ~a ~%" (aref (get vm 'mem) (get vm 'PC)))) |##| Afficher la trace d'éxecution |#
 		(cond 
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'MOVE)	(vm-move	vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC)))												))
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'LOAD)	(vm-load	vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC)))												))
@@ -96,6 +97,8 @@
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'CONS)	(vm-cons	vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC)))												))
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'WRITE)	(vm-write	vm	(nth 1 (aref (get vm 'mem) (get vm 'PC)))																						))
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'GET)	(vm-get		vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC))) (nth 3 (aref (get vm 'mem) (get vm 'PC)))	))
+			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'SET)	(vm-get		vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC))) (nth 3 (aref (get vm 'mem) (get vm 'PC)))	))
+
 		)
 		(incf (get vm 'PC))
 	)
@@ -137,15 +140,13 @@
 				(setf comp (concatenate 'string comp (compile-line (second expr) env)))
 				(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
 				(setf comp (concatenate 'string comp (compile-line (third expr) env)))
-				(setf comp (concatenate 'string comp (format nil "(MOVE R0 R2)~%")))
 				(setf comp (concatenate 'string comp (format nil "(POP R1)~%")))
 				(cond
-					( (equal (first expr) '+) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'ADD)))	)
-					( (equal (first expr) '-) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'SUB)))	)
-					( (equal (first expr) '*) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'MULT)))	)
-					( (equal (first expr) '/) (setf comp (concatenate 'string comp (format nil "(~a R1 R2)~%" 'DIV)))	)
+					( (equal (first expr) '+) (setf comp (concatenate 'string comp (format nil "(~a R1 R0)~%" 'ADD)))	)
+					( (equal (first expr) '-) (setf comp (concatenate 'string comp (format nil "(~a R1 R0)~%" 'SUB)))	)
+					( (equal (first expr) '*) (setf comp (concatenate 'string comp (format nil "(~a R1 R0)~%" 'MULT)))	)
+					( (equal (first expr) '/) (setf comp (concatenate 'string comp (format nil "(~a R1 R0)~%" 'DIV)))	)
 				)
-				(setf comp (concatenate 'string comp (format nil "(MOVE R2 R0)~%")))
 			)
 		)
 		(return-from compile-expr comp)
@@ -157,9 +158,8 @@
 		(setf comp (concatenate 'string comp (compile-line  (second  expr) env) ))
 		(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
 		(setf comp (concatenate 'string comp (compile-line  (third  expr) env) ))
-		(setf comp (concatenate 'string comp (format nil "(MOVE R0 R1)~%")))
-		(setf comp (concatenate 'string comp (format nil "(POP R0)~%")))
-		(setf comp (concatenate 'string comp (format nil "(CMP R1 R0)~%")))
+		(setf comp (concatenate 'string comp (format nil "(POP R1)~%")))
+		(setf comp (concatenate 'string comp (format nil "(CMP R0 R1)~%")))
 
 		;;JMP TO CMPTRUE
 		(cond
@@ -233,6 +233,35 @@
 	)
 	
 )
+;;Compilation d'une boucle tant que
+(defun compile-while (expr env)
+	(let (comp true test length_t length_test boucle)
+		;;Compilation du test
+		(setq test (compile-comp  (second expr) env)) 
+		(setf length_test (count-instruction test))
+		(setf comp (concatenate 'string comp (format nil "~a" test)));;print test
+
+		(setf comp (concatenate 'string comp (format nil "(CMP 0 R0) ~%")))
+		(setq true (compile-line  (third expr) env))
+		(write true)
+		(setf length_t (count-instruction true))
+		(setf comp (concatenate 'string comp (format nil "(JEQ ~a) ~%" (+ length_t 1))))
+		(setf comp (concatenate 'string comp (format nil "~a" true)));;print true
+		(setf boucle (+ length_t 2 length_test))
+		(setf comp (concatenate 'string comp (format nil "(JMP ~a) ~%" (- 0 boucle) )))
+		(return-from compile-while comp)
+	)
+)
+
+;;Compilation de setf 
+(defun compile-setf (expr env)
+	(let (comp)
+		(setf comp (concatenate 'string comp (compile-expr  (third expr) env)) )
+		(setf comp (concatenate 'string comp (replace-params-reg (format nil "(MOVE R0 ~a ) ~%" (second expr)) env)))
+		(return-from compile-setf comp)
+	)
+)
+
 ;;Compilation appel de fct 
 (defun compile-fctcall (call env)
 	(let (comp nbParam)
@@ -323,6 +352,16 @@ is replaced with replacement."
 		)
 		
 		(setf comp (concatenate 'string comp (replace-params-reg (compile-all (fourth fct) env ) env)))
+		;;Restaurer param ?
+		 (let (index)
+		 	(setf index (lastValueEnv env))
+			(loop for arg in (third fct) do
+				(setf comp (concatenate 'string comp (format nil "(SET ~a FP R~a) ~%" (- index 3) index)))
+				(setf env (consPair env arg index))
+				(setf index (+ index 1))
+			)
+		)
+
 		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" )))
 		(setf comp (concatenate 'string comp (format nil "(LABEL end_~a) ~%" (second fct))))
 		(return-from compile-fct comp)
@@ -362,6 +401,8 @@ is replaced with replacement."
  			((atom line) (setf comp (compile-expr line env))) ;; Si c'est un atom genre A ou un nombre
  			((equal (car line) 'if) (setf comp(compile-if line env))) ;;Si c'est un if
  			((equal (car line) 'defun) (setf comp (compile-fct line env))) ;;Si c'est une définition de fonction
+ 			((equal (car line) 'while) (setf comp (compile-while line env))) ;;Si c'est une boucle
+ 			((equal (car line) 'setf) (setf comp (compile-setf line env))) ;;Si c'est une boucle
  			((isOp (car line)) (setf comp(compile-expr line env))) ;;Si c'est une expr arithmetique
  			((isComp (car line)) (setf comp (compile-comp line env)));;Si c'est un operateur de comparaison
  			((atom (car line)) (setf comp (compile-fctcall line env))) ;;Si c'est un atom, peut-être mieux de chercher si l'atom est bien une fonction
