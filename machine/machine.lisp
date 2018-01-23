@@ -68,7 +68,7 @@
 (defun exec-vm (vm)
 	(loop while (not (or (equal (aref (get vm 'mem) (get vm 'PC)) NIL) (equal (get vm 'state) 1)))
 		do
-		#| 		(write (format nil " trace : ~a ~%" (aref (get vm 'mem) (get vm 'PC)))) |##| Afficher la trace d'éxecution |#
+				#| (write (format nil " trace : ~a ~%" (aref (get vm 'mem) (get vm 'PC)))) |#
 		(cond 
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'MOVE)	(vm-move	vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC)))												))
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'LOAD)	(vm-load	vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC)))												))
@@ -140,6 +140,7 @@
 				(setf comp (concatenate 'string comp (compile-line (second expr) env)))
 				(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
 				(setf comp (concatenate 'string comp (compile-line (third expr) env)))
+
 				(setf comp (concatenate 'string comp (format nil "(POP R1)~%")))
 				(cond
 					( (equal (first expr) '+) (setf comp (concatenate 'string comp (format nil "(~a R1 R0)~%" 'ADD)))	)
@@ -158,7 +159,7 @@
 		(setf comp (concatenate 'string comp (compile-line  (second  expr) env) ))
 		(setf comp (concatenate 'string comp (format nil "(PUSH R0)~%")))
 		(setf comp (concatenate 'string comp (compile-line  (third  expr) env) ))
-		(setf comp (concatenate 'string comp (format nil "(POP R1)~%")))
+		(setf comp (concatenate 'string comp (format nil "(POP R1)~%"))) ;;Pour fibo R1 = nbCaractère
 		(setf comp (concatenate 'string comp (format nil "(CMP R1 R0)~%")))
 
 		;;JMP TO CMPTRUE
@@ -268,7 +269,7 @@
 		(setf nbParam 0)
 		(loop for arg in (reverse (cdr call)) do 
 			(setf comp (concatenate 'string comp (compile-line  arg env)))
-			(setf comp (concatenate 'string comp (format nil "(PUSH R0) ~%")))
+			(setf comp (concatenate 'string comp (format nil "(PUSH R0) ~%"))) 
 			(setf nbParam (+ nbParam 1))
 		)
 		(setf comp (concatenate 'string comp (format nil "(PUSH ~a) ~%" nbParam)))
@@ -290,8 +291,16 @@
 
 		(setf comp (concatenate 'string comp (format nil "(POP R1) ~%" )))
 		(setf comp (concatenate 'string comp (format nil "(MOVE R1 SP) ~%" )))
-
-
+		 (let (index cpt)
+		 	(setf index (lastValueEnv env))
+		 	(setf cpt 1)
+			(loop for arg in env do
+				(setf comp (concatenate 'string comp (format nil "(GET ~a FP R~a) ~%" cpt index)))
+				(setf env (consPair env arg index))
+				(setf index (+ index 1))
+				(setf cpt (+ cpt 1))
+			)
+		)
 		(return-from compile-fctcall comp)
 	)
 
@@ -312,6 +321,7 @@ is replaced with replacement."
                              :end (or pos (length string)))
             when pos do (write-string replacement out)
             while pos)))
+;;Remplacement les paramètres par leur registre
 (defun replace-params-reg (string_ env )
 	(let (part replacement comp)
 		(setf comp string_)
@@ -323,13 +333,14 @@ is replaced with replacement."
 		(return-from replace-params-reg comp)
 	)
 )
+;;Donne la valeur de la dernière variable d'environnement
 (defun lastValueEnv(env)
 	(if (null env)
 		4
 		(cdr (first (last env)))
 	)
 )
-
+;;Ajoute une paire pointé à une liste de paires pointés
 (defun consPair (env arg index)
 	(if (null env)
 		(setf env (list (cons arg index)))
@@ -354,18 +365,6 @@ is replaced with replacement."
 		)
 		
 		(setf comp (concatenate 'string comp (replace-params-reg (compile-all (fourth fct) env ) env)))
-		;;Restaurer param ?
-		 (let (index cpt)
-		 	(setf index (lastValueEnv env))
-		 	(setf cpt 1)
-			(loop for arg in (third fct) do
-				(setf comp (concatenate 'string comp (format nil "(SET R~a ~a FP) ~%" index cpt)))
-				(setf env (consPair env arg index))
-				(setf index (+ index 1))
-				(setf cpt (+ cpt 1))
-			)
-		)
-
 		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" )))
 		(setf comp (concatenate 'string comp (format nil "(LABEL end_~a) ~%" (second fct))))
 		(return-from compile-fct comp)
@@ -415,7 +414,7 @@ is replaced with replacement."
  	)
 )
 
-#| a faire : compile-all compile toutes les fonctions avant tout (donc rajouter symbole liste dans vm pour toutes les fonctions) |#
+
 (defun compile-all (progr env)
 	(let (comp)
 		(loop for line in progr do

@@ -11,7 +11,7 @@
 	(fact 6)
 	)
 )
-(setf fiboFunction '((defun fibo(n) ((if(< n 2) n (+ (fibo(- n 1)) (fibo (- n 2))) )) ) (fibo 6) ) )
+(setf fiboFunction '((defun fibo(n) ((if(< n 2) n (+ (fibo(- n 1)) (fibo (- n 2) )) )) ) (fibo 12) ) )
 
 
 (setf testLoop 
@@ -52,5 +52,5 @@
 (compile-load 'vm testFunction1)
 (exec-vm 'vm)
 ;;ou 
-
+(compile-load-exec 'vm fiboFunction)
 (compile-load-exec 'vm testFunction)

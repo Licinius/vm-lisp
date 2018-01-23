@@ -60,6 +60,7 @@
 ; POP P
 (defun vm-pop (vm P)
 	(vm-load vm (get vm 'SP) P)
+	;;(write (format nil "POP ~a ~%" (get vm P)))
 	(vm-incr vm 'SP)
 )
 
@@ -179,6 +180,7 @@
 ; GET OFFSET P1 P2
 (defun vm-get (vm OFFSET P1 P2)
 	(vm-load vm (+ (get vm P1) OFFSET) P2)
+	#| (write (format nil "GET ~a ~%" (get vm P2) )) |#
 )
 
 ; SET P1 OFFSET P2
