@@ -11,7 +11,18 @@
 	(fact 6)
 	)
 )
-(setf fiboFunction '((defun fibo(n) ((if(< n 2) n (+ (fibo(- n 1)) (fibo (- n 2) )) )) ) (fibo 12) ) )
+(setf fiboFunction
+	'((defun fibo (n)
+		(
+			(if (< n 2)
+				n
+				(+ (fibo(- n 1)) (fibo (- n 2) ))
+			)
+		)
+	)
+	(fibo 12)
+	)
+)
 
 
 (setf testLoop 
@@ -30,7 +41,7 @@
 
 (require "machine.lisp")
 (make-vm 'vm 1000)
-(compile-load-exec 'vm factFunction)
+
 ; (get 'vm 'labels)
 ; (get 'vm 'mem)
 

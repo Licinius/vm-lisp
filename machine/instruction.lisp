@@ -8,7 +8,11 @@
 
 ; LOAD adr P
 (defun vm-load (vm adr P)
-	(setf (get vm P) (aref (get vm 'mem) adr))
+	(if (symbolp adr)
+		(setf (get vm P) (aref (get vm 'mem) (get vm adr)))
+		(setf (get vm P) (aref (get vm 'mem) adr))
+
+	)
 )
 
 ; STORE P adr
@@ -165,25 +169,4 @@
 ; CONS P1 P2
 (defun vm-cons (vm P1 P2)
 	(setf (get vm P1) (cons (get vm P1) (get vm P2)))
-)
-
-
-
-; WRITE P
-(defun vm-write (vm P)
-	(if (symbolp P)
-		(write (get vm P))
-		(write P)
-	)
-)
-
-; GET OFFSET P1 P2
-(defun vm-get (vm OFFSET P1 P2)
-	(vm-load vm (+ (get vm P1) OFFSET) P2)
-	#| (write (format nil "GET ~a ~%" (get vm P2) )) |#
-)
-
-; SET P1 OFFSET P2
-(defun vm-set (vm P1 OFFSET P2)
-	(vm-store vm P1 (+ (get vm P2) OFFSET))
 )

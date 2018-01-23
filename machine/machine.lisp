@@ -95,10 +95,6 @@
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'CAR)	(vm-car		vm	(nth 1 (aref (get vm 'mem) (get vm 'PC)))																						))
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'CDR)	(vm-cdr		vm	(nth 1 (aref (get vm 'mem) (get vm 'PC)))																						))
 			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'CONS)	(vm-cons	vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC)))												))
-			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'WRITE)	(vm-write	vm	(nth 1 (aref (get vm 'mem) (get vm 'PC)))																						))
-			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'GET)	(vm-get		vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC))) (nth 3 (aref (get vm 'mem) (get vm 'PC)))	))
-			( (equal (nth 0 (aref (get vm 'mem) (get vm 'PC))) 'SET)	(vm-set		vm	(nth 1 (aref (get vm 'mem) (get vm 'PC))) (nth 2 (aref (get vm 'mem) (get vm 'PC))) (nth 3 (aref (get vm 'mem) (get vm 'PC)))	))
-
 		)
 		(incf (get vm 'PC))
 	)
@@ -291,14 +287,14 @@
 
 		(setf comp (concatenate 'string comp (format nil "(POP R1) ~%" )))
 		(setf comp (concatenate 'string comp (format nil "(MOVE R1 SP) ~%" )))
-		 (let (index cpt)
+		
+		(let (index)
 		 	(setf index (lastValueEnv env))
-		 	(setf cpt 1)
+		 	(setf comp (concatenate 'string comp (format nil "(MOVE FP R3) ~%")))
 			(loop for arg in env do
-				(setf comp (concatenate 'string comp (format nil "(GET ~a FP R~a) ~%" cpt index)))
-				(setf env (consPair env arg index))
+				(setf comp (concatenate 'string comp (format nil "(INCR R3) ~%")))
+				(setf comp (concatenate 'string comp (format nil "(LOAD R3 R~a) ~%" index)))
 				(setf index (+ index 1))
-				(setf cpt (+ cpt 1))
 			)
 		)
 		(return-from compile-fctcall comp)
@@ -353,14 +349,15 @@ is replaced with replacement."
 		(setf comp (concatenate 'string comp (format nil "(JMP end_~a) ~%" (second fct))))
 		(setf comp (concatenate 'string comp (format nil "(LABEL ~a) ~%" (second fct))))
 		;;Ajout des paramètres à l'environnement
-		 (let (index cpt)
+		
+		(let (index)
 		 	(setf index (lastValueEnv env))
-		 	(setf cpt 1)
+		 	(setf comp (concatenate 'string comp (format nil "(MOVE FP R3) ~%")))
 			(loop for arg in (third fct) do
-				(setf comp (concatenate 'string comp (format nil "(GET ~a FP R~a) ~%" cpt index)))
+				(setf comp (concatenate 'string comp (format nil "(INCR R3) ~%")))
+				(setf comp (concatenate 'string comp (format nil "(LOAD R3 R~a) ~%" index)))
 				(setf env (consPair env arg index))
 				(setf index (+ index 1))
-				(setf cpt (+ cpt 1))
 			)
 		)
 		
