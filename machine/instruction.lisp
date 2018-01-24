@@ -64,7 +64,6 @@
 ; POP P
 (defun vm-pop (vm P)
 	(vm-load vm (get vm 'SP) P)
-	;;(write (format nil "POP ~a ~%" (get vm P)))
 	(vm-incr vm 'SP)
 )
 
@@ -158,13 +157,14 @@
 
 ; CAR P
 (defun vm-car (vm P)
-	(car (get vm P))
+	(setf (get vm P) (car (get vm P)))
 )
 
 ; CDR P
 (defun vm-cdr (vm P)
-	(cdr (get vm P))
+	(setf (get vm P) (cdr (get vm P)))
 )
+
 
 ; CONS P1 P2
 (defun vm-cons (vm P1 P2)

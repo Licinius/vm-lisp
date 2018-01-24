@@ -26,8 +26,6 @@
 	(set-Symb nom 'R1 0)
 	(set-Symb nom 'R2 0)
 	(set-Symb nom 'R3 0)
-	(set-Symb nom 'R4 0)
-	(set-Symb nom 'R5 0)
 
 	;; VM State (0 on, 1 off)
 	(set-Symb nom 'state 0)
@@ -217,7 +215,6 @@
 
 		(setq true (compile-line  (third expr) env))
 		(setf length_t (count-instruction true))
-		(write length_t)
 		(setq false (compile-line  (fourth expr) env))
 		(setf length_f (count-instruction false))
 		;;jump taille false plus 1 pour sauter le 'jump pc +taille true'
@@ -240,7 +237,6 @@
 
 		(setf comp (concatenate 'string comp (format nil "(CMP 0 R0) ~%")))
 		(setq true (compile-line  (third expr) env))
-		(write true)
 		(setf length_t (count-instruction true))
 		(setf comp (concatenate 'string comp (format nil "(JEQ ~a) ~%" (+ length_t 1))))
 		(setf comp (concatenate 'string comp (format nil "~a" true)));;print true
@@ -360,13 +356,41 @@ is replaced with replacement."
 				(setf index (+ index 1))
 			)
 		)
-		
-		(setf comp (concatenate 'string comp (replace-params-reg (compile-all (fourth fct) env ) env)))
+		(setf comp (concatenate 'string comp (replace-params-reg (compile-all (cdddr fct) env ) env)))
 		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" )))
 		(setf comp (concatenate 'string comp (format nil "(LABEL end_~a) ~%" (second fct))))
 		(return-from compile-fct comp)
 	)
 )
+
+(defun compile-car (line env)
+	(let (comp)
+		(if (atom (second line))
+			(setf comp (concatenate 'string comp (format nil "(CAR ~a) ~%" (second line))))
+			()
+		)
+		(return-from compile-car comp)
+	)
+)
+(defun compile-cdr (line env)
+	(let (comp)
+		(if (atom (second line))
+			(setf comp (concatenate 'string comp (format nil "(CDR ~a) ~%" (second line))))
+			()
+		)
+		(return-from compile-car comp)
+
+	)
+)
+
+(defun compile-skip(line env)
+	(let (comp)
+		(setf comp (concatenate 'string comp (format nil "(NOP) ~%" (second line))))
+		(return-from compile-car comp)
+
+	)
+)
+
 (defun isOp (op)
 	(let (res)
 		(setf res nil)
@@ -398,14 +422,18 @@ is replaced with replacement."
 (defun compile-line(line env)
  	(let (comp)
  		(cond 
+ 			((null line)(setf comp (compile-skip line env))) ;;Skip la ligne si vide
  			((atom line) (setf comp (compile-expr line env))) ;; Si c'est un atom genre A ou un nombre
  			((equal (car line) 'if) (setf comp(compile-if line env))) ;;Si c'est un if
  			((equal (car line) 'defun) (setf comp (compile-fct line env))) ;;Si c'est une définition de fonction
  			((equal (car line) 'while) (setf comp (compile-while line env))) ;;Si c'est une boucle
  			((equal (car line) 'setf) (setf comp (compile-setf line env))) ;;Si c'est une boucle
+ 			((equal (car line) 'car) (setf comp (compile-car line env))) ;;Si c'est une boucle
+ 			((equal (car line) 'cdr) (setf comp (compile-cdr line env))) ;;Si c'est une boucle
  			((isOp (car line)) (setf comp(compile-expr line env))) ;;Si c'est une expr arithmetique
  			((isComp (car line)) (setf comp (compile-comp line env)));;Si c'est un operateur de comparaison
  			((atom (car line)) (setf comp (compile-fctcall line env))) ;;Si c'est un atom, peut-être mieux de chercher si l'atom est bien une fonction
+
  		)
  		(return-from compile-line comp)
  	)
