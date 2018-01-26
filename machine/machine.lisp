@@ -37,7 +37,7 @@
 )
 
 ; charge une liste d'instruction dans la memoire
-(defun loader (vm instr &optional(ptr 0))
+(defun loader (vm instr &optional(ptr (get vm 'PC)))
 	(cond
 		((not (equal (car instr) NIL))
 			(cond
@@ -46,6 +46,7 @@
 					(equal(caar instr) 'LABEL)
 						(setf (gethash (cadar instr) (get vm 'labels)) ptr)
 						(loader vm (cdr instr) ptr)
+						(set-Symb vm 'PC (length (cdr instr)))
 				)
 					;; sinon charger instruction a la suite dans la memoire
 				(
@@ -283,7 +284,7 @@
 	;; variable length_t = nombre d'instruction de true
 	;; variable test stockera les instructions apres compilation de la condition du while
 	;; variable length_test = nombre d'instruction de test
-	;; variable boucle ; ????????????????????????????????????????????????????????????????????????
+	;; variable boucle ; 
 	(let (comp true test length_t length_test boucle)
 		
 		;; compiler la condition du while
@@ -371,7 +372,7 @@
 		(setf comp (concatenate 'string comp (format nil "(MOVE R1 SP) ~%" )))
 		
 		(let (index)
-		 	(setf index (lastValueEnv env)) ;; ; ????????????????????????????????????????????????????????????????????????
+		 	(setf index (lastValueEnv env)) 
 		 	(setf comp (concatenate 'string comp (format nil "(MOVE FP R3) ~%"))) ;; stocker FP dans R3
 		 	;; pour chaque parametre entrant les restocker dans les registres correspondants (comme avant appel d'unc fonction)
 			(loop for arg in env do 
@@ -443,8 +444,6 @@ is replaced with replacement."
 (defun compile-fct (fct env)
 	;; variable local comp stockera les instructions apres compilation
 	(let (comp)
-		;; jump a la fin de la fonction (car fonctions stockees au debut de la memoire, permet donc de ne pas effectuer la fonction)
-		(setf comp (concatenate 'string comp (format nil "(JMP end_~a) ~%" (second fct))))
 		(setf comp (concatenate 'string comp (format nil "(LABEL ~a) ~%" (second fct)))) ;; label du debut de la fonction
 		
 		;; ajouter des paramètres à l'environnement en les chargeant a partir de fp (car l'appellant les stocke dans la pile avant de l'appeler)
@@ -463,8 +462,7 @@ is replaced with replacement."
 		(setf comp (concatenate 'string comp (replace-params-reg (compile-all (cdddr fct) env ) env)))
 		;; derniere instruction de la fonction, retourne a l'instruction suivant de l'appelant
 		(setf comp (concatenate 'string comp (format nil "(RTN) ~%" )))
-		;; label de fin de fonction (pour le jump de pre-fonction)
-		(setf comp (concatenate 'string comp (format nil "(LABEL end_~a) ~%" (second fct))))
+
 
 		;; retourner les instructions assembleur a la fin
 		(return-from compile-fct comp)
@@ -526,8 +524,7 @@ is replaced with replacement."
 			((equal op '-) (setf  res T))
 			((equal op '*) (setf  res T))
 			((equal op '/) (setf  res T))
-			((numberp op) (setf res T)) ; ????????????????????????????????????????????????????????????????????????
-										; pourquoi si c'est un nombre c'est true
+			((numberp op) (setf res T)) 
 		)
 		;; retourner res
 		(return-from isOP res)

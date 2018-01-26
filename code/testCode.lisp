@@ -49,3 +49,9 @@
 (setf resTest (concatenate 'string resTest (format nil "(plus 5 (moins 20 10)) -> Resultat attendu : 15 Resultat obtenu : ~a ~%" plusMoins2010)))
 
 resTest
+(setf factFunction '((defun fact (n) (if (< n 2) 1 (* n (fact (- n 1))) ) ) ))
+(setf fiboFunction '((defun fibo (n) (if (< n 2) n (+ (fibo(- n 1)) (fibo (- n 2) ))  ) ) ) )
+
+(compile-load 'vm fiboFunction)
+(compile-load 'vm '((fibo 12)))
+(exec-vm 'vm)
