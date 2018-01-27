@@ -19,6 +19,7 @@
 	;; Registre de base
 	(set-Symb nom 'labels (make-hash-table)) ; label (cle = nom, value = numero instruction)
 	(set-Symb nom 'SP taille) ; stack pointer
+	(set-Symb nom 'MP (- taille (* taille 0.10))) ; max pile
 	(set-Symb nom 'FP taille) ; frame pointer
 	(set-Symb nom 'RA 0) ; return adress
 	(set-Symb nom 'PC 0) ; program counter
@@ -35,7 +36,12 @@
 	;; VM State (0 on, 1 off)
 	(set-Symb nom 'state 0)
 )
-
+(defun function-length (instr &optional (size 0) )
+	(if (equal (caar instr) 'RTN)
+		(+ size 1)
+		(function-length (cdr instr) (+ size 1))
+	)
+)
 ; charge une liste d'instruction dans la memoire
 (defun loader (vm instr &optional(ptr (get vm 'PC)))
 	(cond
@@ -45,8 +51,8 @@
 					;; si instruction est label -> stocke le numero de l'instruction dans la hash table labels
 					(equal(caar instr) 'LABEL)
 						(setf (gethash (cadar instr) (get vm 'labels)) ptr)
+						(set-Symb vm 'PC (+ (get vm 'PC) (function-length (cdr instr))))
 						(loader vm (cdr instr) ptr)
-						(set-Symb vm 'PC (length (cdr instr)))
 				)
 					;; sinon charger instruction a la suite dans la memoire
 				(

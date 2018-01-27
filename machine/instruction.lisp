@@ -57,8 +57,17 @@
 
 ; PUSH P
 (defun vm-push (vm P)
-	(vm-decr vm 'SP)
-	(vm-store vm P (get vm 'SP))
+    (vm-decr vm 'SP)
+    (cond
+        (
+            (< (get vm 'SP) (get vm 'MP))
+                (setf (get vm 'state) 1)
+                (write "ERREUR : la pile a deborde")
+        )
+        (
+            (vm-store vm P (get vm 'SP))
+        )
+    )
 )
 
 ; POP P
