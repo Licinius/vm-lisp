@@ -1,5 +1,5 @@
+;; TEST 1
 (require "machine.lisp")
-;;Ici peuvent commencer les tests
 
 (setf factFunction6 '((defun fact (n) (if (< n 2) 1 (* n (fact (- n 1))) ) ) (fact 6)))
 (setf factFunction13 '((defun fact (n) (if (< n 2) 1 (* n (fact (- n 1))) ) ) (fact 13)))
@@ -36,22 +36,41 @@
 
 ;;(setf testLoop '( (defun loop (n) ((while (< n 6) (setf n (+ n 1)) ) n ) ) (loop 1) ) )
 
-(setf resTest (format nil "~%Test factoriel ~%"))
-(setf resTest (concatenate 'string resTest (format nil "6! -> Resultat attendu : 720 Resultat obtenu : ~a ~%" fact6)))
-(setf resTest (concatenate 'string resTest (format nil "13! -> Resultat attendu : 6227020800 Resultat obtenu : ~a ~%" fact13)))
-(setf resTest (concatenate 'string resTest (format nil "3! -> Resultat attendu : 6 Resultat obtenu : ~a ~%" fact3)))
+(setf resTest1 (format nil "~%Test factoriel ~%"))
+(setf resTest1 (concatenate 'string resTest1 (format nil "6! -> Resultat attendu : 720 Resultat obtenu : ~a ~%" fact6)))
+(setf resTest1 (concatenate 'string resTest1 (format nil "13! -> Resultat attendu : 6227020800 Resultat obtenu : ~a ~%" fact13)))
+(setf resTest1 (concatenate 'string resTest1 (format nil "3! -> Resultat attendu : 6 Resultat obtenu : ~a ~%" fact3)))
 
-(setf resTest (concatenate 'string resTest (format nil "~%Test fibonacci ~%" )))
-(setf resTest (concatenate 'string resTest (format nil "fibo(12) -> Resultat attendu : 144 Resultat obtenu : ~a ~%" fibo12)))
-(setf resTest (concatenate 'string resTest (format nil "fibo(3) -> Resultat attendu : 2 Resultat obtenu : ~a ~%" fibo3)))
+(setf resTest1 (concatenate 'string resTest1 (format nil "~%Test fibonacci ~%" )))
+(setf resTest1 (concatenate 'string resTest1 (format nil "fibo(12) -> Resultat attendu : 144 Resultat obtenu : ~a ~%" fibo12)))
+(setf resTest1 (concatenate 'string resTest1 (format nil "fibo(3) -> Resultat attendu : 2 Resultat obtenu : ~a ~%" fibo3)))
 
-(setf resTest (concatenate 'string resTest (format nil "~%Test (plus (moins)) ~%" )))
-(setf resTest (concatenate 'string resTest (format nil "(plus 5 (moins 20 10)) -> Resultat attendu : 15 Resultat obtenu : ~a ~%" plusMoins2010)))
+(setf resTest1 (concatenate 'string resTest1 (format nil "~%Test (plus (moins)) ~%" )))
+(setf resTest1 (concatenate 'string resTest1 (format nil "(plus 5 (moins 20 10)) -> Resultat attendu : 15 Resultat obtenu : ~a ~%" plusMoins2010)))
 
-resTest
+resTest1
+
+;; TEST 2
+(require "machine.lisp")
+;;========================================;;
 (setf factFunction '((defun fact (n) (if (< n 2) 1 (* n (fact (- n 1))) ) ) ))
 (setf fiboFunction '((defun fibo (n) (if (< n 2) n (+ (fibo(- n 1)) (fibo (- n 2) ))  ) ) ) )
-
-(compile-load 'vm fiboFunction)
-(compile-load 'vm '((fibo 12)))
+;;========================================;;
+(make-vm 'vm 1000)
+(compile-load 'vm factFunction)
+(compile-load 'vm '((fact 7)))
 (exec-vm 'vm)
+(setf fact7 (get 'vm 'R0))
+;;========================================;;
+(make-vm 'vm 1000)
+(compile-load 'vm fiboFunction)
+(compile-load 'vm '((fibo 14)))
+(exec-vm 'vm)
+(setf fibo14 (get 'vm 'R0))
+;;========================================;;
+(setf resTest2 (format nil "~%Test factoriel ~%"))
+(setf resTest2 (concatenate 'string resTest2 (format nil "7! -> Resultat attendu : 5040 Resultat obtenu : ~a ~%" fact7)))
+(setf resTest2 (concatenate 'string resTest2 (format nil "~%Test fibonacci ~%" )))
+(setf resTest2 (concatenate 'string resTest2 (format nil "fibo(14) -> Resultat attendu : 377 Resultat obtenu : ~a ~%" fibo14)))
+
+resTest2
